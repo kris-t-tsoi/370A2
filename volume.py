@@ -2,5 +2,19 @@ import os
 
 class Volume:
 
-    def __init__(self):
+    BLK_SIZE = 512
+    DRIVE_SIZE = 128
+
+    def __init__(self, name):
+        self.name = name
+
+    def format(self):
         pass
+
+    def intialBitampFormat(self):
+        data = ""
+
+
+
+        return data
+

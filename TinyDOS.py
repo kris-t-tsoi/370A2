@@ -2,10 +2,14 @@ import os
 import sys
 import fileinput
 import drive
+import volume
 from subprocess import call
 
 
 class TinyDOS:
+
+    vdriveName = None
+    vdrive = None
 
     def format(self):
         pass
@@ -50,9 +54,15 @@ class TinyDOS:
         command = args[0].lower()
 
         if command == "format":
-            pass
+            TinyDOS.vdriveName = args[1]
+            TinyDOS.vdrive = drive.Drive(TinyDOS.vdriveName)
+            TinyDOS.vdrive.format()
+            volData = volume.Volume.intialBitampFormat()
+            TinyDOS.vdrive.write_block(0,volData)
         elif command == "reconnect":
-            pass
+            TinyDOS.vdriveName = args[1]
+            TinyDOS.vdrive = drive.Drive(args[1])
+            TinyDOS.vdrive.reconnect()
         elif command == "ls":
             pass
         elif command == "mkfile":
@@ -68,7 +78,7 @@ class TinyDOS:
         elif command == "deldir":
             pass
         elif command == "quit":
-            pass
+            TinyDOS.vdrive.disconnect()
         else:
             print("Your command "+line+" is not a proper command, please try again")
 
