@@ -1,5 +1,9 @@
 import os
 import sys
+import fileinput
+import drive
+from subprocess import call
+
 
 class TinyDOS:
 
@@ -39,11 +43,59 @@ class TinyDOS:
         #exit program
         pass
 
+    def processCommandLine(self,line):
+
+        #split line into arguments
+        args = line.split()
+        command = args[0].lower()
+
+        if command == "format":
+            pass
+        elif command == "reconnect":
+            pass
+        elif command == "ls":
+            pass
+        elif command == "mkfile":
+            pass
+        elif command == "mkdir":
+            pass
+        elif command == "append":
+            pass
+        elif command == "print":
+            pass
+        elif command == "delfile":
+            pass
+        elif command == "deldir":
+            pass
+        elif command == "quit":
+            pass
+        else:
+            print("Your command "+line+" is not a proper command, please try again")
+
+
+
 
 if __name__ == '__main__':
-    # read argument and pass to funtion
-    print(len(sys.argv))
-    print(sys.argv)
 
-    pass
+    tdos = TinyDOS()
+
+    #if a file with commands has been given in command line
+    if len(sys.argv) == 2:
+        #reads data all at once
+        for fileData in fileinput.input(sys.argv[1]):
+
+             #split up input so that
+            splitData = fileData.split('\n')
+            if (splitData[0] != ""):
+                 tdos.processCommandLine(splitData[0])
+
+    else:
+        while (True):
+            line = input()
+            if line != "":
+                tdos.processCommandLine(line)
+            else:
+                print("Please put in a command")
+
+
 
