@@ -10,27 +10,74 @@ from subprocess import call
 
 class TinyDOS:
 
-    vdriveName = None
-    vdrive = None
+    driveName = None
+    driveInst = None
     volumeInst = None
 
     def format(self):
-        self.vdrive = drive.Drive(self.vdriveName)
-        self.vdrive.format()
-        volData = volume.Volume(self.vdriveName)
+        #initiate and format drive file and save instance
+        self.driveInst = drive.Drive(self.driveName)
+        self.driveInst.format()
+
+        #create a volume instance and write the intial bitmap
+        volData = volume.Volume(self.driveName)
         volData.intialBitmapFormat()
-        self.vdrive.write_block(0, volData.dataToWrite)
+        self.driveInst.write_block(0, volData.dataToWrite)
 
         #save volData as the current volume instance
         self.volumeInst = volData
+        self.volumeInst.tinydos = self
+
+        #let the user know
+        print("Created: " + self.driveName)
 
     def reconnect(self):
-        pass
+        self.driveInst = drive.Drive(os.getcwd()+'/'+self.driveName)
+        self.driveInst.reconnect()
+
+        #get block 0 information
+        self.volumeInst = volume.Volume(self.driveName)
+        self.volumeInst.getBlock0Data(self.driveInst.read_block(0))
+        self.volumeInst.tinydos = self
+
+        print("Successful reconnection to: "+self.driveName)
 
     def list(self):
         pass
 
-    def makeFile(self):
+    def makeFile(self, pathname):
+
+        args = pathname.split('/')
+
+        fileName = args[len(args) - 1]
+
+        if ' ' in fileName:
+            print("Filename can not contain any spaces")
+            return None #TODO find out how to throw execption
+
+        #set default block number where file to be created is
+        blockNumber = 0
+
+        if len(args) != 1:
+            #go through all directories
+            for x in range(0,len(args)-1):
+                #clear the data read for each directory check
+                self.volumeInst.dataRead=''
+
+                #TODO find the block in which directory is in
+
+
+                pass
+
+        #read block
+        #TODO read block of data and store into vol.dataread
+
+        #pass in file name into volume to create data to write
+        blockNumber = self.volumeInst.makeFile(fileName)
+
+        self.driveInst.write_block(blockNumber,self.volumeInst.dataToWrite)
+
+
         pass
 
 
@@ -53,9 +100,9 @@ class TinyDOS:
     def quitProgram(self):
 
         #close file if a file is open
-        if self.vdrive != None:
-            self.vdrive.disconnect()
-            
+        if self.driveInst != None:
+            self.driveInst.disconnect()
+
         # exit program
         sys.exit(0)
 
@@ -71,15 +118,20 @@ class TinyDOS:
 
         #Format drive
         if command == "format":
-            self.vdriveName = args[1]
+            self.driveName = args[1]
             self.format()
-            print("Created "+self.vdriveName)
+
 
         #Reconnect to a drive
         elif command == "reconnect":
-            self.vdriveName = args[1]
-            self.vdrive = drive.Drive(args[1])
-            self.vdrive.reconnect()
+            if self.driveName == None:
+                self.driveName = args[1]
+
+            #if another drive is in use
+            #check if your want to swtich
+            else:
+                pass
+            self.reconnect()
 
         #List all items in a directory
         elif command == "ls":
@@ -87,6 +139,9 @@ class TinyDOS:
 
         #Make file in directory
         elif command == "mkfile":
+            print("path from arg: "+args[1])
+            self.makeFile(args[1])
+
             pass
 
         #make directory
@@ -109,13 +164,14 @@ class TinyDOS:
         elif command == "deldir":
             pass
 
-        #quit program
+        # quit program
         elif command == "quit":
             self.quitProgram()
 
+
          #if not a proper command
         else:
-            print("Your command "+line+" is not a proper command, please try again")
+            print("Your command "+line+" is not a proper or complete command, please try again")
 
 
 
