@@ -39,10 +39,9 @@ class Volume:
 
         return self.dataToWrite
 
-    def getBitmapString(self):
+    def getBitmapString(self,data):
+        self.driveBitMapString = data[:drive.Drive.DRIVE_SIZE]
 
-
-        pass
 
     #adds spaces to fill up the rest of the block for writing
     def finishFormatingBlockData(self):

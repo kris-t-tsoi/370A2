@@ -12,6 +12,7 @@ class TinyDOS:
 
     vdriveName = None
     vdrive = None
+    volumeInst = None
 
     def format(self):
         self.vdrive = drive.Drive(self.vdriveName)
@@ -19,6 +20,9 @@ class TinyDOS:
         volData = volume.Volume(self.vdriveName)
         volData.intialBitmapFormat()
         self.vdrive.write_block(0, volData.dataToWrite)
+
+        #save volData as the current volume instance
+        self.volumeInst = volData
 
     def reconnect(self):
         pass
@@ -48,10 +52,16 @@ class TinyDOS:
 
     def quitProgram(self):
 
-        #close file
+        #close file if a file is open
+        if self.vdrive != None:
+            self.vdrive.disconnect()
+            
+        # exit program
+        sys.exit(0)
 
-        #exit program
-        pass
+
+
+
 
     def processCommandLine(self,line):
 
@@ -67,9 +77,9 @@ class TinyDOS:
 
         #Reconnect to a drive
         elif command == "reconnect":
-            TinyDOS.vdriveName = args[1]
-            TinyDOS.vdrive = drive.Drive(args[1])
-            TinyDOS.vdrive.reconnect()
+            self.vdriveName = args[1]
+            self.vdrive = drive.Drive(args[1])
+            self.vdrive.reconnect()
 
         #List all items in a directory
         elif command == "ls":
@@ -101,7 +111,7 @@ class TinyDOS:
 
         #quit program
         elif command == "quit":
-            TinyDOS.vdrive.disconnect()
+            self.quitProgram()
 
          #if not a proper command
         else:
