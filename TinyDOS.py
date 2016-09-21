@@ -47,7 +47,12 @@ class TinyDOS:
 
     def makeFile(self, pathname):
 
+        print("in tinydos make file: "+str(pathname))
+
         args = pathname.split('/')
+        print(args)
+
+        print("length arg: "+str(len(args)))
 
         fileName = args[len(args) - 1]
 
@@ -58,24 +63,44 @@ class TinyDOS:
         #set default block number where file to be created is
         blockNumber = 0
 
-        if len(args) != 1:
-            #go through all directories
-            for x in range(0,len(args)-1):
-                #clear the data read for each directory check
-                self.volumeInst.dataRead=''
+        #reset data to write to ''
+        self.volumeInst.dataToWrite = ''
 
-                #TODO find the block in which directory is in
+        #if not nested directory (ie only change  directory details in root directory
+        if len(args) == 2:
+
+            #reads block 0 data
+            self.volumeInst.dataRead = self.driveInst.read_block(blockNumber)
+            print("read block")
+            print(self.volumeInst.dataRead)
+
+            #check if file or directory of same name is in the directory
+            if fileName in self.volumeInst.dataRead:
+                print("Sorry you can not have the same named file/directory within a single directory")
+            else:
+                #pass in file name into volume to create data to write
+                self.volumeInst.makeBlk0File(fileName)
+                self.driveInst.write_block(blockNumber,self.volumeInst.dataToWrite)
 
 
-                pass
 
-        #read block
-        #TODO read block of data and store into vol.dataread
 
-        #pass in file name into volume to create data to write
-        blockNumber = self.volumeInst.makeFile(fileName)
 
-        self.driveInst.write_block(blockNumber,self.volumeInst.dataToWrite)
+            # TODO do this later
+            # if len(args) != 1:
+            #     #go through all directories
+            #     for x in range(0,len(args)-1):
+            #         #clear the data read for each directory check
+            #         self.volumeInst.dataRead=''
+            #
+            #         #TODO find the block in which directory is in
+            #
+            #
+            #         pass
+            #
+            # #read block
+            # #TODO read block of data and store into vol.dataread
+
 
 
         pass

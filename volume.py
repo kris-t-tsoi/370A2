@@ -16,7 +16,10 @@ class Volume:
 
     MAX_FILE_NAME_SIZE = 8
     MAX_FILE_BLOCK_USE = 12
-    FILE_DETAIL_SIZE = 64
+    POSITION_3_DIGIT = 16
+    TOTAL_FILE_DETAIL_SIZE = 64
+    DETAIL_SIZE = 62
+    FILE_ICON_SIZE =2
 
     EMPTY_FILE_NAME = ' '*MAX_FILE_NAME_SIZE
     #" name5678 0000:000 000 000 000 000 000 000 000 000 000 000 000 "
@@ -71,35 +74,97 @@ class Volume:
         return self.dataToWrite
 
 
+    #TODO create method which change parent directory detail for nested directories
+
+    #TODO does not change dir details in parent block
     def makeFile(self, fileName):
 
         #if there is space in directory to write
         if self.EMPTY_FILE_NAME in self.dataRead:
-            self.writeNameFirstFreeSpace(self.dataRead,fileName)
+            self.writeFileFirstFreeSpace(self.dataRead,fileName)
             print(self.dataToWrite)
 
         #else is there is no room get the next avaiable block
         else:
-            #format block into directory before writing file name to it
-            self.createDirectoryFormat()
-            self.writeNameFirstFreeSpace(self.dataToWrite,fileName)
-            print(self.dataToWrite)
 
-            #set block to write to
+            #TODO change detail in parent directory
+
+            # set block to write to
             blockNumber = self.nextAvaiableBlock()
 
+            #format block into directory before writing file name to it
+            self.createDirectoryFormat()
+            self.writeFileFirstFreeSpace(self.dataToWrite,fileName)
+            print(self.dataToWrite)
+
         return blockNumber
+
+
+    #makes a file in the root directory
+    def makeBlk0File(self, fileName):
+
+        print("in make blk 0 file")
+
+        # if there is space in directory to write
+        if self.EMPTY_FILE_NAME in self.dataRead:
+            self.writeFileFirstFreeSpace(self.dataRead, fileName)
+
+            #change block 0 bitmap detail and
+            self.driveBlock0FileDetails = self.dataToWrite[drive.Drive.DRIVE_SIZE:]
+            self.dataToWrite = self.driveBlock0BitMap +self.driveBlock0FileDetails
+
+            print(self.dataToWrite)
+
+        # else is there is no room let the user know and keep data in blk 0 as it is
+        else:
+            print("These is no more room in the root directory, please create the file in another directory")
+            self.dataToWrite = self.dataRead
+
 
 
 
 
     #finds the next empty block
     def nextAvaiableBlock(self):
-        return str(self.driveBlock0BitMap).find(self.EMPTY_BLK_ICON)
+        print("in next ava block")
+        blkNum = str(self.driveBlock0BitMap).find(self.EMPTY_BLK_ICON)
+
+        print(blkNum)
+        self.driveBlock0BitMap = self.driveBlock0BitMap[:blkNum]+self.USED_BLK_ICON+self.driveBlock0BitMap[(blkNum+1):]
+        print(len(self.driveBlock0BitMap))
+
+        return blkNum
 
 
     #writes name to the first free name space found
-    def writeNameFirstFreeSpace(self, data,fileName=''):
-        self.dataToWrite = data.replace(self.EMPTY_FILE_NAME,str(fileName).ljust(self.MAX_FILE_NAME_SIZE),' ')
+    def writeFileFirstFreeSpace(self, data,fileName=''):
+
+        print("in write free space")
+
+        #allocate next free block to newly created file
+        blkNum = self.nextAvaiableBlock()
+
+        print(str(self.dataToWrite))
+
+        #write name to first free space
+        self.dataToWrite = data.replace(str(self.EMPTY_FILE_NAME),str(fileName).ljust(self.MAX_FILE_NAME_SIZE,' '),1)
+
+
+        print("after change")
+        print(str(self.dataToWrite))
+
+        #find where file name was written in the block detail string
+        namePos = str(self.dataToWrite).find(fileName)
+
+        #add file name , space and 4length rep and colon minus 2 for filetype
+        posFileDetail = self.dataToWrite[namePos+14:(namePos+self.DETAIL_SIZE)]
+
+        posFileDetail = posFileDetail.replace('0'*3, str(blkNum).rjust(3,'0'),1)
+
+        #TODO fix
+        self.dataToWrite = self.dataToWrite[:(namePos+self.POSITION_3_DIGIT-self.FILE_ICON_SIZE)]+posFileDetail+self.dataToWrite[(namePos+self.DETAIL_SIZE):]
+        print("end")
+        print(str(self.dataToWrite))
+
 
 
