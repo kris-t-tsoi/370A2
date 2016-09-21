@@ -126,20 +126,16 @@ class Volume:
 
     #finds the next empty block
     def nextAvaiableBlock(self):
-        print("in next ava block")
         blkNum = str(self.driveBlock0BitMap).find(self.EMPTY_BLK_ICON)
 
         print(blkNum)
         self.driveBlock0BitMap = self.driveBlock0BitMap[:blkNum]+self.USED_BLK_ICON+self.driveBlock0BitMap[(blkNum+1):]
-        print(len(self.driveBlock0BitMap))
 
         return blkNum
 
 
     #writes name to the first free name space found
     def writeFileFirstFreeSpace(self, data,fileName=''):
-
-        print("in write free space")
 
         #allocate next free block to newly created file
         blkNum = self.nextAvaiableBlock()
@@ -149,22 +145,15 @@ class Volume:
         #write name to first free space
         self.dataToWrite = data.replace(str(self.EMPTY_FILE_NAME),str(fileName).ljust(self.MAX_FILE_NAME_SIZE,' '),1)
 
-
-        print("after change")
-        print(str(self.dataToWrite))
-
         #find where file name was written in the block detail string
         namePos = str(self.dataToWrite).find(fileName)
 
-        #add file name , space and 4length rep and colon minus 2 for filetype
-        posFileDetail = self.dataToWrite[namePos+14:(namePos+self.DETAIL_SIZE)]
-
+        #get position of file details
+        posFileDetail = self.dataToWrite[namePos+self.POSITION_3_DIGIT-self.FILE_ICON_SIZE:(namePos+self.DETAIL_SIZE)]
         posFileDetail = posFileDetail.replace('0'*3, str(blkNum).rjust(3,'0'),1)
 
-        #TODO fix
+
         self.dataToWrite = self.dataToWrite[:(namePos+self.POSITION_3_DIGIT-self.FILE_ICON_SIZE)]+posFileDetail+self.dataToWrite[(namePos+self.DETAIL_SIZE):]
-        print("end")
-        print(str(self.dataToWrite))
 
 
 

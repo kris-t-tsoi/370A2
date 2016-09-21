@@ -109,7 +109,10 @@ class TinyDOS:
     def makeDirectory(self):
         pass
 
-    def appendToFile(self):
+    def appendToFile(self, pathname, data):
+
+
+
         pass
 
     def printFile(self):
@@ -141,14 +144,15 @@ class TinyDOS:
         args = line.split()
         command = args[0].lower()
 
+
         #Format drive
-        if command == "format":
+        if command == "format" and len(args)==2:
             self.driveName = args[1]
             self.format()
 
 
         #Reconnect to a drive
-        elif command == "reconnect":
+        elif command == "reconnect"and len(args)==2:
             if self.driveName == None:
                 self.driveName = args[1]
 
@@ -159,44 +163,45 @@ class TinyDOS:
             self.reconnect()
 
         #List all items in a directory
-        elif command == "ls":
+        elif command == "ls"and len(args)==2:
             pass
 
         #Make file in directory
-        elif command == "mkfile":
+        elif command == "mkfile"and len(args)==2:
             print("path from arg: "+args[1])
             self.makeFile(args[1])
 
             pass
 
         #make directory
-        elif command == "mkdir":
+        elif command == "mkdir"and len(args)==2:
             pass
 
         #append data into file
-        elif command == "append":
+        elif command == "append"and len(args)==3:
             pass
 
         #print content in file
-        elif command == "print":
+        elif command == "print"and len(args)==2:
             pass
 
         #delete file
-        elif command == "delfile":
+        elif command == "delfile"and len(args)==2:
             pass
 
         #delete empty directory
-        elif command == "deldir":
+        elif command == "deldir"and len(args)==2:
             pass
 
-        # quit program
-        elif command == "quit":
-            self.quitProgram()
+        # delete empty directory
+        elif command == "quit"and len(args)==1:
+            pass
 
 
-         #if not a proper command
+            #if not a proper command
         else:
             print("Your command "+line+" is not a proper or complete command, please try again")
+
 
 
 
