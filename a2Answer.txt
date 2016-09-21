@@ -1,0 +1,30 @@
+Yee Wing Kristy Tsoi
+ytso868
+
+Q1.
+If you wish to input a file with data:
+python3 TinyDOS.py pathToFile/filename
+
+Else if you wish to run program with single commands:
+python3 TinyDOS.py
+
+
+
+Q2.
+
+
+
+
+
+
+Q3.
+
+
+
+No it would no work in parallel because if one thread was to create a file into a directory but
+then another thread were to delete the thread. Either the file will be created so the directory
+can not be deleted or the directory is deleted and then the file creation cause the directory to 
+be made again
+
+
+
