@@ -37,10 +37,6 @@ class Volume:
     def __init__(self, name):
         self.name = name
 
-    def format(self):
-        pass
-
-
     def intialBitmapFormat(self):
         #write intial bit map string
         self.driveBlock0BitMap = Volume.USED_BLK_ICON + (Volume.EMPTY_BLK_ICON*127)
@@ -65,7 +61,7 @@ class Volume:
         sizeToAdd = drive.Drive.BLK_SIZE - i
         self.dataToWrite = self.dataToWrite + (' '*sizeToAdd)
 
-
+    #format for new directory
     def createDirectoryFormat(self):
         self.dataToWrite =''
         for x in range(0,8):
@@ -140,8 +136,6 @@ class Volume:
         #allocate next free block to newly created file
         blkNum = self.nextAvaiableBlock()
 
-        print(str(self.dataToWrite))
-
         #write name to first free space
         self.dataToWrite = data.replace(str(self.EMPTY_FILE_NAME),str(fileName).ljust(self.MAX_FILE_NAME_SIZE,' '),1)
 
@@ -157,3 +151,8 @@ class Volume:
 
 
 
+    def getFileDetail(self, fileName,dataReadFrom):
+
+        startDetail = str(dataReadFrom).find(fileName) - self.FILE_ICON_SIZE
+
+        return dataReadFrom[startDetail:(startDetail+self.TOTAL_FILE_DETAIL_SIZE)]

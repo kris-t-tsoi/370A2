@@ -1,0 +1,5 @@
+format b
+
+mkfile /file1
+
+append /file1 "This is some data. "
