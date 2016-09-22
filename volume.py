@@ -29,16 +29,16 @@ class Volume:
 
     #block 0 data
     driveBlock0BitMap = ''
-    driveBlock0FileDetails = ''
 
     #data to be written to or read from a block
     dataToWrite = ''
     dataRead = ''
 
-
+    # -----------------------------------------------------------------------------------------------------------------------
     def __init__(self, name):
         self.name = name
 
+    # -----------------------------------------------------------------------------------------------------------------------
     def intialBitmapFormat(self):
         #write intial bit map string
         self.driveBlock0BitMap = Volume.USED_BLK_ICON + (Volume.EMPTY_BLK_ICON*127)
@@ -50,16 +50,16 @@ class Volume:
 
         return self.dataToWrite
 
-
+    # -----------------------------------------------------------------------------------------------------------------------
     #get block 0 data and save to variables for easier data access
     def getBlock0Data(self,data):
         self.driveBlock0BitMap = data[:drive.Drive.DRIVE_SIZE]
-        self.driveBlock0FileDetails = data[drive.Drive.DRIVE_SIZE:]
 
-
+    # -----------------------------------------------------------------------------------------------------------------------
     def updateBlk0BitmapToBeWritten(self,data):
         self.dataToWrite = self.driveBlock0BitMap + data[128:]
 
+    # -----------------------------------------------------------------------------------------------------------------------
     #adds spaces to fill up the rest of the block for writing
     def finishFormatingBlockData(self,data):
         i = len(data)
@@ -67,6 +67,7 @@ class Volume:
         data = data + (' '*sizeToAdd)
         return data
 
+    # -----------------------------------------------------------------------------------------------------------------------
     #format for new directory
     def createDirectoryFormat(self):
         self.dataToWrite =''
@@ -75,7 +76,7 @@ class Volume:
 
         return self.dataToWrite
 
-
+    # -----------------------------------------------------------------------------------------------------------------------
     #TODO create method which change parent directory detail for nested directories
 
     #TODO does not change dir details in parent block
@@ -99,27 +100,26 @@ class Volume:
 
         return blockNumber
 
-
+    # -----------------------------------------------------------------------------------------------------------------------
     #makes a file in the root directory
-    def makeBlk0File(self, fileName):
+    def makeBlkFile(self, fileName,dirBlk, dirDetail):
 
         # if there is space in directory to write
-        if self.EMPTY_FILE_NAME in self.dataRead:
-            self.writeFileFirstFreeSpace(self.dataRead, fileName)
+        if self.EMPTY_FILE_NAME in dirDetail:
+            det = self.writeFileFirstFreeSpace(dirDetail, fileName)
 
-            #change block 0 bitmap detail and
-            self.driveBlock0FileDetails = self.dataToWrite[drive.Drive.DRIVE_SIZE:]
-            self.dataToWrite = self.driveBlock0BitMap +self.driveBlock0FileDetails
+            #change block 0 bitmap detail
+            driveBlock0FileDetails = self.dataRead[drive.Drive.DRIVE_SIZE:]
+            self.dataToWrite = self.driveBlock0BitMap +driveBlock0FileDetails
+
+            return det
 
         # else is there is no room let the user know and keep data in blk 0 as it is
         else:
-            print("These is no more room in the root directory, please create the file in another directory")
-            self.dataToWrite = self.dataRead
+            raise IOError("These is no more room in this directory, please create the file in another directory")
 
 
-
-
-
+    # -----------------------------------------------------------------------------------------------------------------------
     #finds the next empty block
     def nextAvaiableBlock(self):
         blkNum = str(self.driveBlock0BitMap).find(self.EMPTY_BLK_ICON)
@@ -129,7 +129,7 @@ class Volume:
 
         return blkNum
 
-
+    # -----------------------------------------------------------------------------------------------------------------------
     #writes name to the first free name space found
     def writeFileFirstFreeSpace(self, data,fileName=''):
 
@@ -137,20 +137,19 @@ class Volume:
         blkNum = self.nextAvaiableBlock()
 
         #write name to first free space
-        self.dataToWrite = data.replace(str(self.EMPTY_FILE_NAME),str(fileName).ljust(self.MAX_FILE_NAME_SIZE,' '),1)
+        dirDetail = data.replace(str(self.EMPTY_FILE_NAME),str(fileName).ljust(self.MAX_FILE_NAME_SIZE,' '),1)
 
         #find where file name was written in the block detail string
-        namePos = str(self.dataToWrite).find(fileName)
+        namePos = str(dirDetail).find(fileName)
 
         #get position of file details
-        posFileDetail = self.dataToWrite[namePos+self.POSITION_3_DIGIT-self.FILE_ICON_SIZE:(namePos+self.DETAIL_SIZE)]
+        posFileDetail = dirDetail[namePos+self.POSITION_3_DIGIT-self.FILE_ICON_SIZE:(namePos+self.DETAIL_SIZE)]
         posFileDetail = posFileDetail.replace('0'*3, str(blkNum).rjust(3,'0'),1)
 
+        dirDetail = dirDetail[:(namePos+self.POSITION_3_DIGIT-self.FILE_ICON_SIZE)]+posFileDetail+dirDetail[(namePos+self.DETAIL_SIZE):]
+        return dirDetail
 
-        self.dataToWrite = self.dataToWrite[:(namePos+self.POSITION_3_DIGIT-self.FILE_ICON_SIZE)]+posFileDetail+self.dataToWrite[(namePos+self.DETAIL_SIZE):]
-
-
-
+    # -----------------------------------------------------------------------------------------------------------------------
     def getFileDetail(self, fileName,dataReadFrom):
 
         startDetail = str(dataReadFrom).find(fileName) - self.FILE_ICON_SIZE

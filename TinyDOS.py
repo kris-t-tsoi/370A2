@@ -24,7 +24,6 @@ class TinyDOS:
         volData = volume.Volume(self.driveName)
         volData.intialBitmapFormat()
         self.driveInst.write_block(0, volData.dataToWrite)
-        print(volData.dataToWrite)
 
         #save volData as the current volume instance
         self.volumeInst = volData
@@ -51,6 +50,53 @@ class TinyDOS:
 
     # -----------------------------------------------------------------------------------------------------------------------
     def makeFile(self, pathname):
+        if ' ' in pathname:
+            print("path can not contain any spaces")
+
+        elif pathname[0] != '/':
+            print('root directory is not in pathname')
+
+        else:
+
+            args = pathname.split('/')
+            fileName = args[len(args) - 1]
+
+            # set default directory block number where file is to be created in
+            directoryDetBlkNum = 0
+
+            # initalise block number where file data is
+            blockNumber = 0
+
+            # reset data to write to ''
+            self.volumeInst.dataToWrite = ''
+
+            # if nested directory, find blk where directory detail is stored
+            if len(args) != 2:
+                # TODO find directoryDetBlkNum
+                pass
+
+            # reads directory data
+            dirDet = self.driveInst.read_block(directoryDetBlkNum)
+
+            # check if file or directory of same name is in the directory
+            if fileName in dirDet:
+                raise IOError("Sorry you can not have the same named file/directory within a single directory")
+            else:
+                if directoryDetBlkNum != 0 :
+                    self.volumeInst.dataRead = self.driveInst.read_block(0)
+
+                # pass in file name and directly blk number into volume to create data to write
+                dirDet =self.volumeInst.makeBlkFile(fileName,directoryDetBlkNum,dirDet)
+                self.driveInst.write_block(directoryDetBlkNum,dirDet)
+
+                if directoryDetBlkNum != 0:
+                    self.driveInst.write_block(0,self.volumeInst.dataToWrite)
+
+
+
+
+    # -----------------------------------------------------------------------------------------------------------------------
+    def makeDirectory(self,pathname):
 
         if ' ' in pathname:
             print("path can not contain any spaces")
@@ -63,48 +109,32 @@ class TinyDOS:
             args = pathname.split('/')
             fileName = args[len(args) - 1]
 
-            #set default block number where file to be created is
+            #set default directory block number where file is to be created in
+            directoryDetBlkNum = 0
+
+            #initalise block number where file data is
             blockNumber = 0
 
             #reset data to write to ''
             self.volumeInst.dataToWrite = ''
 
-            #if not nested directory (ie only change  directory details in root directory
-            if len(args) == 2:
+            # if nested directory, find blk where directory detail is stored
+            if len(args) != 2:
+                #TODO find directoryDetBlkNum
+                pass
 
-                #reads block 0 data
-                self.volumeInst.dataRead = self.driveInst.read_block(blockNumber)
+            #reads directory data
+            directoryDetail = self.driveInst.read_block(directoryDetBlkNum)
 
-                #check if file or directory of same name is in the directory
-                if fileName in self.volumeInst.dataRead:
-                    print("Sorry you can not have the same named file/directory within a single directory")
-                else:
-                    #pass in file name into volume to create data to write
-                    self.volumeInst.makeBlk0File(fileName)
-                    self.driveInst.write_block(blockNumber,self.volumeInst.dataToWrite)
+            #check if file or directory of same name is in the directory
+            if fileName in directoryDetail:
+                fileDetPosInBlock = str(directoryDetail).find(fileName) - self.volumeInst.FILE_ICON_SIZE
+                fileDet = self.volumeInst.getFileDetail(fileName,directoryDetail)
 
-
+                #get 4dig rep length
+                fileLen = int(fileDet[self.volumeInst.POSITION_FILE_LENGTH:(self.volumeInst.POSITION_FILE_LENGTH+4)])
 
 
-
-                # TODO do this later
-                # if len(args) != 1:
-                #     #go through all directories
-                #     for x in range(0,len(args)-1):
-                #         #clear the data read for each directory check
-                #         self.volumeInst.dataRead=''
-                #
-                #         #TODO find the block in which directory is in
-                #
-                #
-                #         pass
-                #
-                # #read block
-                # #TODO read block of data and store into vol.dataread
-
-    # -----------------------------------------------------------------------------------------------------------------------
-    def makeDirectory(self):
-        pass
 
 
     #-----------------------------------------------------------------------------------------------------------------------
@@ -131,106 +161,107 @@ class TinyDOS:
             #reset data to write to ''
             self.volumeInst.dataToWrite = ''
 
-            # if not nested directory (ie only change  directory details in root directory
-            if len(args) == 2:
-
-                #reads block 0 data
-                directoryDetail = self.driveInst.read_block(directoryDetBlkNum)
-
-                #check if file or directory of same name is in the directory
-                if fileName in directoryDetail:
-                    fileDetPosInBlock = str(directoryDetail).find(fileName) - self.volumeInst.FILE_ICON_SIZE
-                    fileDet = self.volumeInst.getFileDetail(fileName,directoryDetail)
-
-                    #get 4dig rep length
-                    fileLen = int(fileDet[self.volumeInst.POSITION_FILE_LENGTH:(self.volumeInst.POSITION_FILE_LENGTH+4)])
+            # if nested directory, find blk where directory detail is stored
+            if len(args) != 2:
+                #TODO find directoryDetBlkNum
+                pass
 
 
-                    #get blocks allocated to file and split into array of allocations
-                    blksAllocated = fileDet[self.volumeInst.POSITION_3_DIGIT:]
-                    blkList = str(blksAllocated).split(' ') #note has extra '' at last index as there was space
 
-                    #length of data to write
-                    lenDataToWrite = len(data)
+            #reads directory data
+            directoryDetail = self.driveInst.read_block(directoryDetBlkNum)
 
-                    #get total length of file
-                    totalFileLen = lenDataToWrite + fileLen
+            #check if file or directory of same name is in the directory
+            if fileName in directoryDetail:
+                fileDetPosInBlock = str(directoryDetail).find(fileName) - self.volumeInst.FILE_ICON_SIZE
+                fileDet = self.volumeInst.getFileDetail(fileName,directoryDetail)
 
-                    # divide to find which of 12 blocks 3dig to go to
-                    index = int(fileLen / self.driveInst.BLK_SIZE)
-
-                    #if the the last blk is already full
-                    if index != 0 and int(fileLen % self.driveInst.BLK_SIZE) == 0:
-                        index = index + 1
-
-                    #while there is still data to write
-                    while lenDataToWrite !=0 :
-
-                        dataLenInBlk = 0
-                        writenIntoBlock = ''
-
-                        #if there is no block allocated
-                        if int(blkList[index]) == 0:
-
-                            #allocate new block
-                            blockNumber = self.volumeInst.nextAvaiableBlock()
-
-                            blkList[index] = blockNumber
-
-                        #block allocated already has written data in
-                        else:
-                            #get block that still has space
-                            blockNumber = int(blkList[index])
-                            #length of data already in block
-                            dataLenInBlk = int(fileLen % self.driveInst.BLK_SIZE)
+                #get 4dig rep length
+                fileLen = int(fileDet[self.volumeInst.POSITION_FILE_LENGTH:(self.volumeInst.POSITION_FILE_LENGTH+4)])
 
 
-                        #get data to be written from user's input data
-                        dataAdd = data[:(self.driveInst.BLK_SIZE-int(dataLenInBlk))]
+                #get blocks allocated to file and split into array of allocations
+                blksAllocated = fileDet[self.volumeInst.POSITION_3_DIGIT:]
+                blkList = str(blksAllocated).split(' ') #note has extra '' at last index as there was space
 
-                        #get data from block
-                        dataFromBlock = self.driveInst.read_block(blockNumber)
+                #length of data to write
+                lenDataToWrite = len(data)
 
-                        #add new data after data stored in block
-                        writenIntoBlock =  dataFromBlock[:int(dataLenInBlk)]+dataAdd
-                        writenIntoBlock = self.volumeInst.finishFormatingBlockData(writenIntoBlock)
+                #get total length of file
+                totalFileLen = lenDataToWrite + fileLen
 
-                        #remove data the was just written
-                        data = data[len(dataAdd):]
+                # divide to find which of 12 blocks 3dig to go to
+                index = int(fileLen / self.driveInst.BLK_SIZE)
 
-                        #remove length added
-                        lenDataToWrite = lenDataToWrite - len(dataAdd)
+                #if the the last blk is already full
+                if index != 0 and int(fileLen % self.driveInst.BLK_SIZE) == 0:
+                    index = index + 1
 
-                        #write data into file block
-                        self.driveInst.write_block(blockNumber,writenIntoBlock)
+                #while there is still data to write
+                while lenDataToWrite !=0 :
 
-                        #get next index prepared if need to write to another file
-                        index = index +1
+                    dataLenInBlk = 0
+                    writenIntoBlock = ''
 
+                    #if there is no block allocated
+                    if int(blkList[index]) == 0:
 
-                    #convert blk allocation array into string
-                    blksAllocated = ''
-                    for x in range(0,12):
-                        blksAllocated = blksAllocated +str(blkList[x]).rjust(3, '0')+' '
+                        #allocate new block
+                        blockNumber = self.volumeInst.nextAvaiableBlock()
 
-                    #update file detail in directory details
-                    fileDet = fileDet[:self.volumeInst.POSITION_FILE_LENGTH] + str(totalFileLen).rjust(4, '0') + ':'+str(blksAllocated)
-                    directoryDetail = directoryDetail[:fileDetPosInBlock]+fileDet+directoryDetail[(fileDetPosInBlock+self.volumeInst.TOTAL_FILE_DETAIL_SIZE):]
-                    self.driveInst.write_block(directoryDetBlkNum, directoryDetail)
+                        blkList[index] = blockNumber
 
-                    #update bitmap in block 0
-                    blk0data = self.driveInst.read_block(0)
-                    self.volumeInst.updateBlk0BitmapToBeWritten(blk0data)
-                    self.driveInst.write_block(0,self.volumeInst.dataToWrite)
-
-
-                else:
-                    print(str(fileName)+" does not exist in this directory")
+                    #block allocated already has written data in
+                    else:
+                        #get block that still has space
+                        blockNumber = int(blkList[index])
+                        #length of data already in block
+                        dataLenInBlk = int(fileLen % self.driveInst.BLK_SIZE)
 
 
-            #if not root directory
+                    #get data to be written from user's input data
+                    dataAdd = data[:(self.driveInst.BLK_SIZE-int(dataLenInBlk))]
+
+                    #get data from block
+                    dataFromBlock = self.driveInst.read_block(blockNumber)
+
+                    #add new data after data stored in block
+                    writenIntoBlock =  dataFromBlock[:int(dataLenInBlk)]+dataAdd
+                    writenIntoBlock = self.volumeInst.finishFormatingBlockData(writenIntoBlock)
+
+                    #remove data the was just written
+                    data = data[len(dataAdd):]
+
+                    #remove length added
+                    lenDataToWrite = lenDataToWrite - len(dataAdd)
+
+                    #write data into file block
+                    self.driveInst.write_block(blockNumber,writenIntoBlock)
+
+                    #get next index prepared if need to write to another file
+                    index = index +1
+
+
+                #convert blk allocation array into string
+                blksAllocated = ''
+                for x in range(0,12):
+                    blksAllocated = blksAllocated +str(blkList[x]).rjust(3, '0')+' '
+
+                #update file detail in directory details
+                fileDet = fileDet[:self.volumeInst.POSITION_FILE_LENGTH] + str(totalFileLen).rjust(4, '0') + ':'+str(blksAllocated)
+                directoryDetail = directoryDetail[:fileDetPosInBlock]+fileDet+directoryDetail[(fileDetPosInBlock+self.volumeInst.TOTAL_FILE_DETAIL_SIZE):]
+                self.driveInst.write_block(directoryDetBlkNum, directoryDetail)
+
+                #update bitmap in block 0
+                blk0data = self.driveInst.read_block(0)
+                self.volumeInst.updateBlk0BitmapToBeWritten(blk0data)
+                self.driveInst.write_block(0,self.volumeInst.dataToWrite)
+
+
             else:
-                 pass
+                print(str(fileName)+" does not exist in this directory")
+
+
 
     # -----------------------------------------------------------------------------------------------------------------------
     def printFile(self, pathname):
@@ -282,8 +313,8 @@ class TinyDOS:
                     blkList = str(blksAllocated).split(' ') #note has extra '' at last index as there was space
 
                     for x in range(0,(index+1)):
-                        blockNumber = int(blkList[x])
-                        dataPrint = self.driveInst.read_block(blockNumber)
+                        fileBlkNum = int(blkList[x])
+                        dataPrint = self.driveInst.read_block(fileBlkNum)
 
                         #if last block, only print out actual data
                         if x == index:
@@ -316,6 +347,11 @@ class TinyDOS:
         # exit program
         sys.exit(0)
 
+     # -----------------------------------------------------------------------------------------------------------------------
+        def findDirectoryBlock(self):
+            pass
+
+
     # -----------------------------------------------------------------------------------------------------------------------
 
     def processCommandLine(self,line):
@@ -325,14 +361,13 @@ class TinyDOS:
 
         cmdline = line
 
+        #if there is data (3rd param) remove it to get command
         if firstQuote != -1 :
             cmdline = line[:firstQuote]
 
+        #get command and pathnames and convert command to lowercase
         args = cmdline.split()
         command = args[0].lower()
-
-        print("ars length: "+str(len(args)))
-        print(args)
 
 
         #Format drive
@@ -362,11 +397,14 @@ class TinyDOS:
 
         #Make file in directory
         elif command == "mkfile"and len(args)==2:
-            self.makeFile(args[1])
+            try:
+                self.makeFile(args[1])
+            except IOError as e:
+                print(e)
 
         #make directory
         elif command == "mkdir"and len(args)==2:
-            pass
+            self.makeDirectory(args[1])
 
         #append data into file
         elif command == "append"and len(args)==2:
@@ -374,16 +412,12 @@ class TinyDOS:
             data = str(data).replace('"','')
             self.appendToFile(args[1],data)
 
-            pass
-
         #print content in file
         elif command == "print"and len(args)==2:
             try:
                 self.printFile(args[1])
             except IOError as e:
                 print(e)
-
-            pass
 
         #delete file
         elif command == "delfile"and len(args)==2:
