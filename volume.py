@@ -58,12 +58,7 @@ class Volume:
 
 
     def updateBlk0BitmapToBeWritten(self,data):
-        print("data")
-        print(self.driveBlock0BitMap)
-        print(data[drive.Drive.BLK_SIZE:])
-        print("ok")
         self.dataToWrite = self.driveBlock0BitMap + data[128:]
-        print("length " + str(len(self.dataToWrite)))
 
     #adds spaces to fill up the rest of the block for writing
     def finishFormatingBlockData(self,data):
@@ -89,7 +84,6 @@ class Volume:
         #if there is space in directory to write
         if self.EMPTY_FILE_NAME in self.dataRead:
             self.writeFileFirstFreeSpace(self.dataRead,fileName)
-            print(self.dataToWrite)
 
         #else is there is no room get the next avaiable block
         else:
@@ -102,7 +96,6 @@ class Volume:
             #format block into directory before writing file name to it
             self.createDirectoryFormat()
             self.writeFileFirstFreeSpace(self.dataToWrite,fileName)
-            print(self.dataToWrite)
 
         return blockNumber
 
@@ -117,8 +110,6 @@ class Volume:
             #change block 0 bitmap detail and
             self.driveBlock0FileDetails = self.dataToWrite[drive.Drive.DRIVE_SIZE:]
             self.dataToWrite = self.driveBlock0BitMap +self.driveBlock0FileDetails
-
-            print(self.dataToWrite)
 
         # else is there is no room let the user know and keep data in blk 0 as it is
         else:
@@ -135,8 +126,6 @@ class Volume:
 
         #change bitmap
         self.driveBlock0BitMap = self.driveBlock0BitMap[:blkNum]+self.USED_BLK_ICON+self.driveBlock0BitMap[(blkNum+1):]
-
-        print('size bitmap '+str(len(self.driveBlock0BitMap)))
 
         return blkNum
 

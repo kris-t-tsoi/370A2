@@ -158,7 +158,6 @@ class TinyDOS:
 
                     # divide to find which of 12 blocks 3dig to go to
                     index = int(fileLen / self.driveInst.BLK_SIZE)
-                    print("blk to write: " + str(index))
 
                     #if the the last blk is already full
                     if index != 0 and int(fileLen % self.driveInst.BLK_SIZE) == 0:
@@ -167,14 +166,8 @@ class TinyDOS:
                     #while there is still data to write
                     while lenDataToWrite !=0 :
 
-                        print("in")
-
                         dataLenInBlk = 0
-
                         writenIntoBlock = ''
-
-                        print("index: "+str(index))
-                        print("value in blkAllocat index: "+ str(int(blkList[index])))
 
                         #if there is no block allocated
                         if int(blkList[index]) == 0:
@@ -195,9 +188,6 @@ class TinyDOS:
                         #get data to be written from user's input data
                         dataAdd = data[:(self.driveInst.BLK_SIZE-int(dataLenInBlk))]
 
-                        print("data to be written length: "+str(len(dataAdd)))
-                        print(str(dataAdd))
-
                         #get data from block
                         dataFromBlock = self.driveInst.read_block(blockNumber)
 
@@ -205,14 +195,8 @@ class TinyDOS:
                         writenIntoBlock =  dataFromBlock[:int(dataLenInBlk)]+dataAdd
                         writenIntoBlock = self.volumeInst.finishFormatingBlockData(writenIntoBlock)
 
-                        print("data before")
-                        print('*'+str(data)+'*')
-
                         #remove data the was just written
                         data = data[len(dataAdd):]
-
-                        print("data after")
-                        print('*' + str(data) + '*')
 
                         #remove length added
                         lenDataToWrite = lenDataToWrite - len(dataAdd)
@@ -229,32 +213,13 @@ class TinyDOS:
                     for x in range(0,12):
                         blksAllocated = blksAllocated +str(blkList[x]).rjust(3, '0')+' '
 
-
-
-                        #update file detail in directory details
+                    #update file detail in directory details
                     fileDet = fileDet[:self.volumeInst.POSITION_FILE_LENGTH] + str(totalFileLen).rjust(4, '0') + ':'+str(blksAllocated)
-                    print(("fileDet"))
-                    print(fileDet)
-
-                    print("check")
-                    print(directoryDetail[:fileDetPosInBlock])
-                    print("len: "+str(len(directoryDetail[:fileDetPosInBlock])))
-                    print(fileDet)
-                    print(directoryDetail[(fileDetPosInBlock+self.volumeInst.TOTAL_FILE_DETAIL_SIZE):])
-
                     directoryDetail = directoryDetail[:fileDetPosInBlock]+fileDet+directoryDetail[(fileDetPosInBlock+self.volumeInst.TOTAL_FILE_DETAIL_SIZE):]
-
-                    print("directory detail to be updated")
-                    print(directoryDetail)
-                    print("length "+str(len(directoryDetail)))
                     self.driveInst.write_block(directoryDetBlkNum, directoryDetail)
-
-
-                    print("past")
 
                     #update bitmap in block 0
                     blk0data = self.driveInst.read_block(0)
-                    print(blk0data)
                     self.volumeInst.updateBlk0BitmapToBeWritten(blk0data)
                     self.driveInst.write_block(0,self.volumeInst.dataToWrite)
 
@@ -268,8 +233,70 @@ class TinyDOS:
                  pass
 
     # -----------------------------------------------------------------------------------------------------------------------
-    def printFile(self):
-        pass
+    def printFile(self, pathname):
+
+        if ' ' in pathname:
+            print("path can not contain any spaces")
+
+        elif pathname[0] != '/':
+            print('root directory is not in pathname')
+        else:
+
+            args = pathname.split('/')
+            fileName = args[len(args) - 1]
+
+            #set default directory block number where file is
+            directoryDetBlkNum = 0
+
+            #initalise block number where file data is
+            blockNumber = 0
+
+            #reset data to write to ''
+            self.volumeInst.dataToWrite = ''
+
+            # if not nested directory (ie only change  directory details in root directory
+            if len(args) == 2:
+
+                #reads block 0 data
+                directoryDetail = self.driveInst.read_block(directoryDetBlkNum)
+
+                #check if file or directory of same name is in the directory
+                if fileName in directoryDetail:
+                    fileDetPosInBlock = str(directoryDetail).find(fileName) - self.volumeInst.FILE_ICON_SIZE
+                    fileDet = self.volumeInst.getFileDetail(fileName,directoryDetail)
+
+                    #get 4dig rep length
+                    fileLen = int(fileDet[self.volumeInst.POSITION_FILE_LENGTH:(self.volumeInst.POSITION_FILE_LENGTH+4)])
+
+                    # if there is no data
+                    if fileLen == 0:
+                        raise IOError('This file is empty and has not data to print')
+
+                    # divide to find how many files are used
+                    index = int(fileLen / self.driveInst.BLK_SIZE)
+
+                    lastDataLen = int(fileLen % self.driveInst.BLK_SIZE)
+
+                    #get blocks allocated to file and split into array of allocations
+                    blksAllocated = fileDet[self.volumeInst.POSITION_3_DIGIT:]
+                    blkList = str(blksAllocated).split(' ') #note has extra '' at last index as there was space
+
+                    for x in range(0,(index+1)):
+                        blockNumber = int(blkList[x])
+                        dataPrint = self.driveInst.read_block(blockNumber)
+
+                        #if last block, only print out actual data
+                        if x == index:
+                            print(str(dataPrint[:lastDataLen]))
+                        else:
+                            print(str(dataPrint))
+
+
+
+            #if not a nested directory
+            else:
+                pass
+
 
     # -----------------------------------------------------------------------------------------------------------------------
     def deleteFile(self):
@@ -351,6 +378,11 @@ class TinyDOS:
 
         #print content in file
         elif command == "print"and len(args)==2:
+            try:
+                self.printFile(args[1])
+            except IOError as e:
+                print(e)
+
             pass
 
         #delete file
