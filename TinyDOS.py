@@ -82,6 +82,7 @@ class TinyDOS:
             if fileName in dirDet:
                 raise IOError("Sorry you can not have the same named file/directory within a single directory")
             else:
+                #get bitmap details
                 if directoryDetBlkNum != 0 :
                     self.volumeInst.dataRead = self.driveInst.read_block(0)
 
@@ -89,6 +90,7 @@ class TinyDOS:
                 dirDet =self.volumeInst.makeBlkFile(fileName,directoryDetBlkNum,dirDet)
                 self.driveInst.write_block(directoryDetBlkNum,dirDet)
 
+                #update bitmape
                 if directoryDetBlkNum != 0:
                     self.driveInst.write_block(0,self.volumeInst.dataToWrite)
 
@@ -128,11 +130,26 @@ class TinyDOS:
 
             #check if file or directory of same name is in the directory
             if fileName in directoryDetail:
-                fileDetPosInBlock = str(directoryDetail).find(fileName) - self.volumeInst.FILE_ICON_SIZE
-                fileDet = self.volumeInst.getFileDetail(fileName,directoryDetail)
+                raise IOError("Sorry you can not have the same named file/directory within a single directory")
 
-                #get 4dig rep length
-                fileLen = int(fileDet[self.volumeInst.POSITION_FILE_LENGTH:(self.volumeInst.POSITION_FILE_LENGTH+4)])
+            else:
+                # get bitmap details if not block 0
+                if directoryDetBlkNum != 0:
+                    self.volumeInst.dataRead = self.driveInst.read_block(0)
+
+                # TODO create directory
+                directoryDetail = self.volumeInst.makeDir(fileName,directoryDetBlkNum,directoryDetail)
+                newDirData = self.volumeInst.extraReturn
+                newDirBlkNum = self.volumeInst.childBlkNum
+
+                #write new dir data into directory
+                self.driveInst.write_block(int(newDirBlkNum),newDirData)
+                self.driveInst.write_block(blockNumber,directoryDetail)
+
+
+                # update bitmap if not block 0
+                if directoryDetBlkNum != 0:
+                    self.driveInst.write_block(0, self.volumeInst.dataToWrite)
 
 
 
