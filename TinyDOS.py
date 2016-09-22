@@ -133,14 +133,51 @@ class TinyDOS:
 
                     fileDet = self.volumeInst.getFileDetail(fileName,self.volumeInst.dataRead)
 
-                    #get 4dig rep legth
+                    #get 4dig rep length
+                    fileLen = int(fileDet[self.volumeInst.POSITION_FILE_LENGTH:(self.volumeInst.POSITION_FILE_LENGTH+4)])
+
+
+                    #get blocks allocated to file
+                    blksAllocated = fileDet[self.volumeInst.POSITION_3_DIGIT:]
+                    print("allocated")
+                    print(str(blksAllocated))
+
+                    blkList = str(blksAllocated).split(' ')
 
                     #divide to find which of 12 blocks 3dig to go to
+                    fileBlkNumToWrite = int(fileLen / self.driveInst.BLK_SIZE)
+                    print("blk to write: "+str(fileBlkNumToWrite))
 
-                    #loop check to see if any data left to write
+                    writenInBlk = fileLen % self.driveInst.BLK_SIZE
+                    print("writen in blk: " + str(writenInBlk))
 
+                    #length of data to write
+                    lenDataToWrite = len(data)
 
-                    #see how muchh space is in that block and write that much to it
+                    #while there is still data to write
+                    while lenDataToWrite !=0 :
+                        #get data to be written
+                        dataAdd = data[:(self.driveInst.BLK_SIZE-int(writenInBlk))]
+
+                        print("data to be written length: "+len(dataAdd))
+                        print(str(dataAdd))
+
+                        self.volumeInst.dataToWrite =  self.volumeInst.dataRead[:int(writenInBlk)]+dataAdd
+                        data = data[len(dataAdd):]
+
+                        #remove length added
+                        lenDataToWrite = lenDataToWrite - len(dataAdd)
+
+                        #write data into block
+                        self.driveInst.write_block(blockNumber,self.volumeInst.dataToWrite)
+
+                        #check if anything else to write
+
+                        #gif so get another block and put data into that, make sure to change bitmap
+
+                        pass
+
+                    #see how much space is in that block and write that much to it
 
 
 
@@ -215,7 +252,6 @@ class TinyDOS:
 
         #Make file in directory
         elif command == "mkfile"and len(args)==2:
-            print("path from arg: "+args[1])
             self.makeFile(args[1])
 
         #make directory
@@ -224,7 +260,13 @@ class TinyDOS:
 
         #append data into file
         elif command == "append"and len(args)==3:
-            self.appendToFile(args[1],args[2])
+
+            #check if data is within double qoutes
+            if args[2][0] != '"' and args[2][len(args)] != '"':
+                print('Data to be written in file must be contained within 2 " marks')
+            else:
+                data = str(args[2]).replace('"','')
+                self.appendToFile(args[1],data)
 
             pass
 
