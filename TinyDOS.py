@@ -14,37 +14,28 @@ class TinyDOS:
     driveInst = None
     volumeInst = None
 
-    def recurDOSFile(self,gpBlkNum, needChildBlkNum = False, path = None):
+    def recurDOSFile(self, gpBlkNum, needChildBlkNum=False, path=None):
 
         print("recursive")
 
-
-        print("path length: "+str(len(path)))
+        print("path length: " + str(len(path)))
         print(str(path))
 
 
-
-        #get grandparent directory block allocations det from blk
+        # get grandparent directory block allocations det from blk
         self.volumeInst.glbGrandParentdet = self.driveInst.read_block(gpBlkNum)
 
         # reads directory data
         directoryDetail = self.volumeInst.glbGrandParentdet
 
-
-
-        print("gp blk: "+str(gpBlkNum))
+        print("gp blk: " + str(gpBlkNum))
 
         print(str(directoryDetail))
-        print("argument 1 "+path[1])
-
+        print("argument 1 " + path[1])
 
         # use glbGrandParentdet to get all bloks allocated to GPDirect
         # check if parent file or directory is in the directory
         if path[1] in directoryDetail:
-
-
-
-            print("in first")
 
             dirDetPosInBlock = str(directoryDetail).find(path[1]) - self.volumeInst.FILE_ICON_SIZE
             dirDet = self.volumeInst.getFileDetail(path[1], directoryDetail)
@@ -63,8 +54,15 @@ class TinyDOS:
 
             blkNum = ''
 
-            if needChildBlkNum == True or len(path) != 3:
-                #check if found
+            # print("make: "+ str(make))
+
+            # if make == True and len(path) == 3:
+            #     blkNum = int(blkList[index])
+
+
+            # if needChildBlkNum == True or len(path) != 3:
+            if len(path) != 3:
+                # check if found
                 found = False
 
                 # loop through all blocks allocated to GP direct
@@ -86,36 +84,35 @@ class TinyDOS:
             self.volumeInst.glbParentBlkNum = blkNum
             self.volumeInst.glbGrandParentBlkNum = gpBlkNum
 
-
-
             if needChildBlkNum == True and len(path) == 3:
-                #if going all the way to last child then store parent and grandparent details now before the get changed
+                # if going all the way to last child then store parent and grandparent details now before the get changed
                 self.volumeInst.glbGrandParentdet = self.driveInst.read_block(self.volumeInst.glbGrandParentBlkNum)
                 self.volumeInst.glbParentdet = self.driveInst.read_block(self.volumeInst.glbParentBlkNum)
-                self.volumeInst.childBlkNum = self.volumeInst.recursiveFile(self.volumeInst.glbParentBlkNum, needChildBlkNum=needChildBlkNum, path=path)
-
+                self.volumeInst.childBlkNum = self.volumeInst.recursiveFile(self.volumeInst.glbParentBlkNum,
+                                                                            needChildBlkNum=needChildBlkNum,
+                                                                            path=path)
 
             # if still need to go through path, return parentblk number
             if len(path) != 3:
-                return self.recurDOSFile(self.volumeInst.glbParentBlkNum,needChildBlkNum = needChildBlkNum, path = path[1:])
+                return self.recurDOSFile(self.volumeInst.glbParentBlkNum, needChildBlkNum=needChildBlkNum,
+                                         path=path[1:])
 
             else:
-                #if not yet saved
+                # if not yet saved
                 if needChildBlkNum == False:
-                    self.volumeInst.glbGrandParentdet = self.driveInst.read_block(self.volumeInst.glbGrandParentBlkNum)
+                    self.volumeInst.glbGrandParentdet = self.driveInst.read_block(
+                        self.volumeInst.glbGrandParentBlkNum)
                     self.volumeInst.glbParentdet = self.driveInst.read_block(self.volumeInst.glbParentBlkNum)
 
-                print("grandparent now changed to: "+str(self.volumeInst.glbGrandParentBlkNum))
+                print("grandparent now changed to: " + str(self.volumeInst.glbGrandParentBlkNum))
                 print("parent now changed to: " + str(self.volumeInst.glbParentBlkNum))
 
-                print("return "+str(self.volumeInst.glbParentBlkNum))
+                print("return " + str(self.volumeInst.glbParentBlkNum))
                 return self.volumeInst.glbParentBlkNum
 
 
         else:
             raise IOError("This file path does not exist")
-
-
 
     # -----------------------------------------------------------------------------------------------------------------------
     def format(self):
@@ -148,14 +145,95 @@ class TinyDOS:
         print("Successful reconnection to: "+self.driveName)
 
     # -----------------------------------------------------------------------------------------------------------------------
-    def list(self):
+    def list(self,pathname):
+
+        print("inlist")
+
+        if ' ' in pathname:
+            print("path can not contain any spaces")
+
+        elif pathname[0] != '/':
+            print('root directory is not in pathname')
+
+        else:
+            print("path")
+            print(pathname)
+
+            args = pathname.split('/')
+
+            print("args size "+str(len(args)))
+
+            # set default directory block number where file is to be created in
+            directoryDetBlkNum = 0
+
+            # initalise block number where file data is
+            blockNumber = 0
+
+            # reset data to write to ''
+            self.volumeInst.dataToWrite = ''
+
+            #if root
+            if len(args) == 2:
+
+                # reads directory data
+                dirDet = self.driveInst.read_block(directoryDetBlkNum)
+
+                if self.checkIfDirectoryEmpty(dirDet,isRoot=True) == True:
+                    raise IOError("Directory " + str(pathname) + " has no files")
+
+                else:
+
+                    if dirDet.count(' '*9) == 6:
+                        raise IOError("Root Directory has no files")
+                    else:
+                        for x in range(0,6):
+
+                            name = dirDet[self.driveInst.DRIVE_SIZE+(x*self.volumeInst.TOTAL_FILE_DETAIL_SIZE):self.driveInst.DRIVE_SIZE+(x*self.volumeInst.TOTAL_FILE_DETAIL_SIZE)+2+self.volumeInst.MAX_FILE_NAME_SIZE]
+
+                            if ('f:'+' '*8) == name or ('d:'+' '*8) == name:
+                                pass
+                            else:
+                                print(str(name))
+
+
+            else:
+
+                dirName = args[len(args) - 1]
+
+                # todo if nested directory, find blk where directory detail is stored
+                if len(args) != 2:
+                    # directoryDetBlkNum = self.recurDOSFile(0, needChildBlkNum=True, path=args)
+                    pass
+
+                # reads directory data
+                dirDet = self.driveInst.read_block(directoryDetBlkNum)
+
+                if self.checkIfDirectoryEmpty(dirDet,isRoot=True) == True:
+                    raise IOError("Directory " + str(pathname) + " has no files")
+
+                else:
+
+                    #TODO change and go through all blk for dir as can have more than one blk
+
+                    if len((' ' * 9 in dirDet)) == 6:
+                        raise IOError("Root Directory has no files")
+                    else:
+
+
+                        for x in range(0, 6):
+
+                            name = dirDet[self.driveInst.DRIVE_SIZE + (
+                            x * self.volumeInst.TOTAL_FILE_DETAIL_SIZE) + 2:self.driveInst.DRIVE_SIZE + (
+                            x * self.volumeInst.TOTAL_FILE_DETAIL_SIZE) + 2 + self.volumeInst.MAX_FILE_NAME_SIZE]
+
+                            if (' ' * 8) != name:
+                                print(str(name))
+
+
         pass
 
     # -----------------------------------------------------------------------------------------------------------------------
     def makeFile(self, pathname):
-
-
-        print("make file")
 
         if ' ' in pathname:
             print("path can not contain any spaces")
@@ -203,7 +281,6 @@ class TinyDOS:
                 print("detail: after create" + str(int(directoryDetBlkNum)))
                 print(dirDet)
 
-                #todo make so print name in sub direct
 
                 #update bitmape
                 if directoryDetBlkNum != 0:
@@ -213,8 +290,6 @@ class TinyDOS:
 
     # -----------------------------------------------------------------------------------------------------------------------
     def makeDirectory(self,pathname):
-
-        print("make directory")
 
         if ' ' in pathname:
             print("path can not contain any spaces")
@@ -264,17 +339,29 @@ class TinyDOS:
                 newDirData = self.volumeInst.extraReturn
                 newDirBlkNum = self.volumeInst.childBlkNum
 
-                print("detail: after create" + str(int(directoryDetBlkNum)))
-                print(directoryDetail)
-
                 #write new dir data into directory
                 self.driveInst.write_block(int(newDirBlkNum),newDirData)
                 self.driveInst.write_block(directoryDetBlkNum,directoryDetail)
 
-                print("checking " + str(int(directoryDetBlkNum)))
-                print(directoryDetail)
+                if len(args) != 2:
+                    parentName = args[len(args) - 2]
+                    detPosInBlock = str(self.volumeInst.glbGrandParentdet).find(parentName) - self.volumeInst.FILE_ICON_SIZE
+                    gpdata = self.volumeInst.glbGrandParentdet
+                    fileDet = self.volumeInst.getFileDetail(parentName, gpdata)
 
-                #update granparent directory file length
+                    # get 4dig rep length
+                    fileLen = int(fileDet[self.volumeInst.POSITION_FILE_LENGTH:(self.volumeInst.POSITION_FILE_LENGTH + 4)])
+
+                    totalLength = fileLen+self.driveInst.BLK_SIZE
+
+                    fileDet = fileDet[:self.volumeInst.POSITION_FILE_LENGTH] + str(totalLength).rjust(4, '0') + ':'+fileDet[(self.volumeInst.POSITION_3_DIGIT):]
+
+                    toWriteGP =directoryDetail = gpdata[:detPosInBlock]+fileDet+gpdata[(detPosInBlock+self.volumeInst.TOTAL_FILE_DETAIL_SIZE):]
+
+                    self.driveInst.write_block(self.volumeInst.glbGrandParentBlkNum,toWriteGP)
+
+                    if self.volumeInst.glbGrandParentBlkNum == 0:
+                        self.volumeInst.dataToWrite = self.driveInst.read_block(0)
 
 
                 # update bitmap if not block 0
@@ -322,6 +409,10 @@ class TinyDOS:
             if fileName in directoryDetail:
                 fileDetPosInBlock = str(directoryDetail).find(fileName) - self.volumeInst.FILE_ICON_SIZE
                 fileDet = self.volumeInst.getFileDetail(fileName,directoryDetail)
+
+                if fileDet[:2] != self.volumeInst.FILE_ICON:
+                    raise IOError("This is not a file and therefore can not append data to it")
+
 
                 #get 4dig rep length
                 fileLen = int(fileDet[self.volumeInst.POSITION_FILE_LENGTH:(self.volumeInst.POSITION_FILE_LENGTH+4)])
@@ -477,8 +568,66 @@ class TinyDOS:
 
 
     # -----------------------------------------------------------------------------------------------------------------------
-    def deleteFile(self):
-        pass
+    def deleteFile(self,pathname):
+
+        if ' ' in pathname:
+            print("path can not contain any spaces")
+
+        elif pathname[0] != '/':
+            print('root directory is not in pathname')
+
+        else:
+
+            args = pathname.split('/')
+            fileName = args[len(args) - 1]
+
+            #set default directory block number where file is to be created in
+            directoryDetBlkNum = 0
+
+            #initalise block number where file data is
+            blockNumber = 0
+
+            #reset data to write to ''
+            self.volumeInst.dataToWrite = ''
+
+            # if nested directory, find blk where directory detail is stored
+            if len(args) != 2:
+                #TODO find directoryDetBlkNum
+                pass
+
+            #reads directory data
+            directoryDetail = self.driveInst.read_block(directoryDetBlkNum)
+
+            #check if file or directory of same name is in the directory
+            if fileName in directoryDetail:
+                fileDetPosInBlock = str(directoryDetail).find(fileName) - self.volumeInst.FILE_ICON_SIZE
+                fileDet = self.volumeInst.getFileDetail(fileName,directoryDetail)
+
+                #get blocks allocated to file and split into array of allocations
+                blksAllocated = fileDet[self.volumeInst.POSITION_3_DIGIT:]
+                blkList = str(blksAllocated).split(' ') #note has extra '' at last index as there was space
+
+                bitmap = self.volumeInst.driveBlock0BitMap
+
+                for x in range(0, 12):
+                    fileBlkNum = int(blkList[x])
+
+                    if fileBlkNum == 0:
+                        break
+                    else:
+                        #todo remove from bitmap and write empty value into blk
+                        self.volumeInst.driveBlock0BitMap=self.volumeInst.driveBlock0BitMap[:fileBlkNum] + self.volumeInst.EMPTY_BLK_ICON + self.volumeInst.driveBlock0BitMap[(fileBlkNum + 1):]
+                        self.driveInst.write_block(fileBlkNum, self.driveInst.EMPTY_BLK)
+
+                #update directory with empty file detail
+                changeFilDet = directoryDetail[:fileDetPosInBlock]+self.volumeInst.emptyFileName()+directoryDetail[(fileDetPosInBlock+self.volumeInst.TOTAL_FILE_DETAIL_SIZE):]
+                self.driveInst.write_block(directoryDetBlkNum,changeFilDet)
+
+                # update bitmap in block 0
+                blk0data = self.driveInst.read_block(0)
+                self.volumeInst.updateBlk0BitmapToBeWritten(blk0data)
+                self.driveInst.write_block(0, self.volumeInst.dataToWrite)
+
 
     # -----------------------------------------------------------------------------------------------------------------------
     def deleteDirectory(self):
@@ -495,8 +644,18 @@ class TinyDOS:
         sys.exit(0)
 
      # -----------------------------------------------------------------------------------------------------------------------
-        def findDirectoryBlock(self):
-            pass
+    def checkIfDirectoryEmpty(self, blkData, isRoot = False):
+
+        index = 8
+
+        if isRoot == True:
+            index = 6
+
+        if blkData.count(' ' * 9) == index:
+            return True;
+        else:
+
+            return False
 
 
     # -----------------------------------------------------------------------------------------------------------------------
@@ -542,7 +701,10 @@ class TinyDOS:
 
         #List all items in a directory
         elif command == "ls"and len(args)==2:
-            pass
+            try:
+                self.list(args[1])
+            except IOError as e:
+                print(e)
 
         #Make file in directory
         elif command == "mkfile"and len(args)==2:
@@ -553,13 +715,21 @@ class TinyDOS:
 
         #make directory
         elif command == "mkdir"and len(args)==2:
-            self.makeDirectory(args[1])
+
+            try:
+                self.makeDirectory(args[1])
+            except IOError as e:
+                print(e)
+
 
         #append data into file
         elif command == "append"and len(args)==2:
-            data = line[firstQuote:]
-            data = str(data).replace('"','')
-            self.appendToFile(args[1],data)
+            try:
+                data = line[firstQuote:]
+                data = str(data).replace('"','')
+                self.appendToFile(args[1],data)
+            except IOError as e:
+                print(e)
 
         #print content in file
         elif command == "print"and len(args)==2:
@@ -570,7 +740,10 @@ class TinyDOS:
 
         #delete file
         elif command == "delfile"and len(args)==2:
-            pass
+            try:
+                self.deleteFile(args[1])
+            except IOError as e:
+                print(e)
 
         #delete empty directory
         elif command == "deldir"and len(args)==2:
