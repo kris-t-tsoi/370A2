@@ -611,9 +611,15 @@ class TinyDOS:
 
                 #if need to change file length of grandparent direct det
                 if len(args) != 2:
+
                     parentName = args[len(args) - 2]
                     detPosInBlock = str(self.volumeInst.glbGrandParentdet).find(parentName) - self.volumeInst.FILE_ICON_SIZE
                     gpdata = self.volumeInst.glbGrandParentdet
+
+
+                    print("gp data " )
+                    print(gpdata)
+
                     fileDet = self.volumeInst.getFileDetail(parentName, gpdata)
 
                     # get 4dig rep length
