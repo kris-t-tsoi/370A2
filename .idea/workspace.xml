@@ -2,10 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d00d3954-b7ee-4bf8-ad86-cad9c54abd76" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/TinyDOS.py" afterPath="$PROJECT_DIR$/TinyDOS.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/b" afterPath="$PROJECT_DIR$/b" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test files/mytest" afterPath="$PROJECT_DIR$/test files/mytest" />
     </list>
     <ignored path="370A2.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -67,11 +64,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="TinyDOS.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="TinyDOS.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/TinyDOS.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1133">
-              <caret line="322" column="33" selection-start-line="322" selection-start-column="33" selection-end-line="322" selection-end-column="33" />
+            <state relative-caret-position="330">
+              <caret line="471" column="87" selection-start-line="471" selection-start-column="87" selection-end-line="471" selection-end-column="87" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
@@ -79,7 +76,7 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="mytest" pinned="false" current-in-tab="true">
+      <file leaf-file-name="mytest" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test files/mytest">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="180">
@@ -147,8 +144,8 @@
         <option value="$PROJECT_DIR$/test files/t1" />
         <option value="$PROJECT_DIR$/check" />
         <option value="$PROJECT_DIR$/volume.py" />
-        <option value="$PROJECT_DIR$/TinyDOS.py" />
         <option value="$PROJECT_DIR$/test files/mytest" />
+        <option value="$PROJECT_DIR$/TinyDOS.py" />
       </list>
     </option>
   </component>
@@ -840,21 +837,21 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/TinyDOS.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1133">
-          <caret line="322" column="33" selection-start-line="322" selection-start-column="33" selection-end-line="322" selection-end-column="33" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/test files/mytest">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="180">
           <caret line="12" column="21" selection-start-line="12" selection-start-column="21" selection-end-line="12" selection-end-column="21" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/TinyDOS.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="330">
+          <caret line="471" column="87" selection-start-line="471" selection-start-column="87" selection-end-line="471" selection-end-column="87" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
