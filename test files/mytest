@@ -2,10 +2,10 @@ format b
 
 mkfile /file1
 
-append /file1 "This is some data. "
-
-append /file1 "Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data.*"
-
-print /file1
-
 mkdir /dir1
+
+mkfile /dir1/file1
+
+mkdir /dir1/dir2
+
+mkfile /dir1/dir2/file2

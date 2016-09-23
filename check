@@ -1,0 +1,26 @@
+ # reads directory data
+            dirDet = self.driveInst.read_block(directoryDetBlkNum)
+
+            # check if file or directory of same name is in the directory
+            if fileName in dirDet:
+                raise IOError("Sorry you can not have the same named file/directory within a single directory")
+            else:
+                #get bitmap details
+                if directoryDetBlkNum != 0 :
+                    self.volumeInst.dataRead = self.driveInst.read_block(0)
+
+                print("blk detail: " + str(int(directoryDetBlkNum)))
+                print(dirDet)
+
+                # pass in file name and directly blk number into volume to create data to write
+                dirDet =self.volumeInst.makeBlkFile(fileName,directoryDetBlkNum,dirDet)
+                self.driveInst.write_block(directoryDetBlkNum,dirDet)
+
+                print("detail: after create" + str(int(directoryDetBlkNum)))
+                print(dirDet)
+
+                #todo make so print name in sub direct
+
+                #update bitmape
+                if directoryDetBlkNum != 0:
+                    self.driveInst.write_block(0,self.volumeInst.dataToWrite)

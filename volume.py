@@ -37,6 +37,19 @@ class Volume:
     extraReturn = ''
     childBlkNum =''
 
+    #block number that contains the child's file detail(64bit)
+    glbGrandParentBlkNum = ''
+
+    # block number that contains the parent's file detail(64b
+    glbParentBlkNum = ''
+
+    # parent file detail (64bit) detail string
+    glbGrandParentdet = ''
+
+    # child file detail (64bit) detail string
+    glbParentdet = ''
+
+
     # -----------------------------------------------------------------------------------------------------------------------
     def __init__(self, name):
         self.name = name
@@ -202,8 +215,10 @@ class Volume:
         # write name to first free space
         dirDet = self.DIRECTORY_ICON + str(dirName).ljust(self.MAX_FILE_NAME_SIZE, ' ')+' '+('0'*4)+':'+((('0'*3)+' ')*self.MAX_FILE_BLOCK_USE)
 
+        #Todo get parent current length and add 512
 
-        # todo change 3dig rep in parent data
+
+        #Add new block allocation to parent
         posFileDetail = dirDet[self.POSITION_3_DIGIT:(detPosInBlock + self.TOTAL_FILE_DETAIL_SIZE-1)]
         posFileDetail = posFileDetail.replace('0' * 3, str(blkNum).rjust(3, '0'), 1)
         dirDet = dirDet[:self.POSITION_3_DIGIT]+posFileDetail
@@ -221,3 +236,11 @@ class Volume:
         startDetail = str(dataReadFrom).find(fileName) - self.FILE_ICON_SIZE
 
         return dataReadFrom[startDetail:(startDetail+self.TOTAL_FILE_DETAIL_SIZE)]
+
+
+
+
+
+
+
+
