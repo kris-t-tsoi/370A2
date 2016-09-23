@@ -595,20 +595,9 @@ class TinyDOS:
 
             self.volumeInst.childBlkNum = ''
 
-            # todo if nested directory, find blk where directory detail is stored
             if len(args) != 2:
                 directoryDetBlkNum = self.recurDOSFile(0, path=args[1:-1], isFile=True)
-                print("parent: "+ str(self.volumeInst.glbParentBlkNum))
-                print("directoryDetBlkNum: " + str(directoryDetBlkNum))
-
-                print("parent det ")
-                print(self.volumeInst.glbParentdet)
-
                 detail = self.driveInst.read_block(directoryDetBlkNum)
-
-                print("change parent det ")
-                print(detail)
-
                 self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2],detail)
 
             writeblkNum = directoryDetBlkNum
@@ -651,8 +640,6 @@ class TinyDOS:
                 #if the the last blk is already full
                 if index != 0 and int(fileLen % self.driveInst.BLK_SIZE) == 0:
                     index = index + 1
-
-                print("len to write "+str(lenDataToWrite))
 
                 #while there is still data to write
                 while lenDataToWrite >0 :
@@ -698,9 +685,6 @@ class TinyDOS:
                     #get next index prepared if need to write to another file
                     index = index +1
 
-                    print("len to write " + str(lenDataToWrite))
-
-
                 #convert blk allocation array into string
                 blksAllocated = ''
                 for x in range(0,12):
@@ -725,6 +709,8 @@ class TinyDOS:
     # -----------------------------------------------------------------------------------------------------------------------
     def printFile(self, pathname):
 
+        print("print file")
+
         if ' ' in pathname:
             print("path can not contain any spaces")
 
@@ -744,42 +730,58 @@ class TinyDOS:
             #reset data to write to ''
             self.volumeInst.dataToWrite = ''
 
-            # if not nested directory (ie only change  directory details in root directory
-            if len(args) == 2:
+            self.volumeInst.childBlkNum = ''
 
-                #reads block 0 data
-                directoryDetail = self.driveInst.read_block(directoryDetBlkNum)
+            if len(args) != 2:
+                directoryDetBlkNum = self.recurDOSFile(0, path=args[1:-1], isFile=True)
+                detail = self.driveInst.read_block(directoryDetBlkNum)
+                self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2], detail)
 
-                #check if file or directory of same name is in the directory
-                if fileName in directoryDetail:
-                    fileDetPosInBlock = str(directoryDetail).find(fileName) - self.volumeInst.FILE_ICON_SIZE
-                    fileDet = self.volumeInst.getFileDetail(fileName,directoryDetail)
+            writeblkNum = directoryDetBlkNum
 
-                    #get 4dig rep length
-                    fileLen = int(fileDet[self.volumeInst.POSITION_FILE_LENGTH:(self.volumeInst.POSITION_FILE_LENGTH+4)])
+            if self.volumeInst.childBlkNum != '':
+                writeblkNum = self.volumeInst.childBlkNum
 
-                    # if there is no data
-                    if fileLen == 0:
-                        raise IOError('This file is empty and has not data to print')
+            # reads directory data
+            directoryDetail = self.driveInst.read_block(writeblkNum)
 
-                    # divide to find how many files are used
-                    index = int(fileLen / self.driveInst.BLK_SIZE)
+            self.updateBitMap()
 
-                    lastDataLen = int(fileLen % self.driveInst.BLK_SIZE)
+            # check if file or directory of same name is in the directory
+            if fileName in directoryDetail:
+                fileDetPosInBlock = str(directoryDetail).find(fileName) - self.volumeInst.FILE_ICON_SIZE
+                fileDet = self.volumeInst.getFileDetail(fileName, directoryDetail)
 
-                    #get blocks allocated to file and split into array of allocations
-                    blksAllocated = fileDet[self.volumeInst.POSITION_3_DIGIT:]
-                    blkList = str(blksAllocated).split(' ') #note has extra '' at last index as there was space
+                if fileDet[:2] != self.volumeInst.FILE_ICON:
+                    raise IOError("This is not a file and therefore can not print data")
 
-                    for x in range(0,(index+1)):
-                        fileBlkNum = int(blkList[x])
-                        dataPrint = self.driveInst.read_block(fileBlkNum)
 
-                        #if last block, only print out actual data
-                        if x == index:
-                            print(str(dataPrint[:lastDataLen]))
-                        else:
-                            print(str(dataPrint))
+
+                #get 4dig rep length
+                fileLen = int(fileDet[self.volumeInst.POSITION_FILE_LENGTH:(self.volumeInst.POSITION_FILE_LENGTH+4)])
+
+                # if there is no data
+                if fileLen == 0:
+                    raise IOError('This file is empty and has not data to print')
+
+                # divide to find how many files are used
+                index = int(fileLen / self.driveInst.BLK_SIZE)
+
+                lastDataLen = int(fileLen % self.driveInst.BLK_SIZE)
+
+                #get blocks allocated to file and split into array of allocations
+                blksAllocated = fileDet[self.volumeInst.POSITION_3_DIGIT:]
+                blkList = str(blksAllocated).split(' ') #note has extra '' at last index as there was space
+
+                for x in range(0,(index+1)):
+                    fileBlkNum = int(blkList[x])
+                    dataPrint = self.driveInst.read_block(fileBlkNum)
+
+                    #if last block, only print out actual data
+                    if x == index:
+                        print(str(dataPrint[:lastDataLen]))
+                    else:
+                        print(str(dataPrint))
 
 
 
