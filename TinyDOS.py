@@ -164,11 +164,19 @@ class TinyDOS:
 
                     parentBlk= 0
 
-                    if int(blkList[index]) == 0:
+                    #if there is no data at all
+                    if int(blkList[index]) == 0 and lastDataLen !=0:
                         # get first free block block to be written to
                         parentBlk = self.volumeInst.nextAvaiableBlock()
+                        print("gg")
+
+                    elif int(blkList[index]) == 0:
+                        parentBlk = int(blkList[index-1])
+                        print("hh")
+
                     else:
                         parentBlk = int(blkList[index])
+                        print("aa")
 
                     print("parent")
                     print(parentBlk)
@@ -379,6 +387,8 @@ class TinyDOS:
                             if ('f:'+' '*8) == name or ('d:'+' '*8) == name:
                                 pass
                             else:
+                                #TODO get size of file and directory
+
                                 print(str(name))
 
 
@@ -444,15 +454,24 @@ class TinyDOS:
             # reset data to write to ''
             self.volumeInst.dataToWrite = ''
 
+            self.volumeInst.childBlkNum = ''
+
             # todo if nested directory, find blk where directory detail is stored
             if len(args) != 2:
                 directoryDetBlkNum = self.recurDOSFile(0,path=args[1:-1], isFile = True)
+                self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2],self.volumeInst.glbParentdet,args[-1])
+                print("Child plk num = "+str(self.volumeInst.childBlkNum))
                 pass
 
             print("mkfile parent dir blk num "+str(directoryDetBlkNum))
 
-            # reads directory data
-            dirDet = self.driveInst.read_block(directoryDetBlkNum)
+            writeblkNum = directoryDetBlkNum
+
+            if self.volumeInst.childBlkNum != '':
+                writeblkNum = self.volumeInst.childBlkNum
+
+            dirDet = self.driveInst.read_block(writeblkNum)
+
 
             self.updateBitMap()
 
@@ -468,14 +487,15 @@ class TinyDOS:
                 if directoryDetBlkNum != 0 :
                     self.volumeInst.dataRead = self.driveInst.read_block(0)
 
-                print("blk detail: " + str(int(directoryDetBlkNum)))
+
+                print("blk detail: " + str(writeblkNum))
                 print(dirDet)
 
                 # pass in file name and directly blk number into volume to create data to write
                 dirDet =self.volumeInst.makeBlkFile(fileName,directoryDetBlkNum,dirDet)
-                self.driveInst.write_block(directoryDetBlkNum,dirDet)
+                self.driveInst.write_block(int(writeblkNum),dirDet)
 
-                print("detail: after create" + str(int(directoryDetBlkNum)))
+                print("detail: after create" + str(writeblkNum))
                 print(dirDet)
 
 
@@ -484,8 +504,39 @@ class TinyDOS:
                     self.driveInst.write_block(0,self.volumeInst.dataToWrite)
 
 
-
     # -----------------------------------------------------------------------------------------------------------------------
+    def findChildBlkNum(self,pDirName, pdirDet,filename):
+
+        print("in")
+
+        # get position
+        dirDetPosInBlock = str(pdirDet).find(pDirName) - self.volumeInst.FILE_ICON_SIZE
+
+        # get file detail
+        dirDet = self.volumeInst.getFileDetail(pDirName, pdirDet)
+
+        # get 4dig rep length
+        dirLen = int(
+            dirDet[self.volumeInst.POSITION_FILE_LENGTH:(self.volumeInst.POSITION_FILE_LENGTH + 4)])
+
+        # get blocks allocated to file and split into array of allocations
+        blkList = self.getAllocatedBlocks(dirDet)
+
+        print("block allocation")
+        print(blkList)
+
+
+        # loop through all blocks allocated to GP direct
+        for x in range(0, 12):
+            blkNum = int(blkList[x])
+
+            if blkNum == 0:
+                break
+
+            return blkNum
+
+
+            # -----------------------------------------------------------------------------------------------------------------------
     def makeDirectory(self,pathname):
 
         if ' ' in pathname:
@@ -505,18 +556,23 @@ class TinyDOS:
             #initalise block number where file data is
             blockNumber = 0
 
-            #reset data to write to ''
+            # reset data to write to ''
             self.volumeInst.dataToWrite = ''
+
+            self.volumeInst.childBlkNum = ''
 
             # todo if nested directory, find blk where directory detail is stored
             if len(args) != 2:
-                directoryDetBlkNum = self.recurDOSFile(0, path=args[1:-1],isFile = False)
-                pass
+                directoryDetBlkNum = self.recurDOSFile(0, path=args[1:-1], isFile=True)
+
 
             print("mkfile parent dir blk num " + str(directoryDetBlkNum))
+            writeblkNum = directoryDetBlkNum
 
-            # reads directory data
-            dirDet = self.driveInst.read_block(directoryDetBlkNum)
+            # if self.volumeInst.childBlkNum != '':
+            #     writeblkNum = self.volumeInst.childBlkNum
+
+            dirDet = self.driveInst.read_block(writeblkNum)
 
             #update bitmap
             self.updateBitMap()

@@ -93,9 +93,7 @@ class Volume:
         return det
 
     # -----------------------------------------------------------------------------------------------------------------------
-    #TODO create method which change parent directory detail for nested directories
 
-    #TODO does not change dir details in parent block
     def makeFile(self, fileName):
 
         #if there is space in directory to write
@@ -138,6 +136,8 @@ class Volume:
     # -----------------------------------------------------------------------------------------------------------------------
     # makes a file in the root directory
     def makeDir(self, dirName, dirBlk, parentDirDetail):
+
+        print("volume")
 
         # if there is space in directory to write
         if self.EMPTY_FILE_NAME in parentDirDetail:
