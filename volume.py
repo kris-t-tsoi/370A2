@@ -145,15 +145,21 @@ class Volume:
             det = self.writeDirectoryFirstFreeSpace(parentDirDetail,dirName)
 
 
-            # change block 0 bitmap detail if dirblk is not blk0
-            if dirBlk != 0:
-                driveBlk0Det = self.dataRead[drive.Drive.DRIVE_SIZE:]
-                self.dataToWrite = self.driveBlock0BitMap + driveBlk0Det
+            print("return")
+            print(det)
+
 
             return det
 
         # else is there is no room and directory is not blk 0
         elif dirBlk != 0:
+            #to find next block
+
+            #change file det in grandparent to add in new block
+
+            #recursive call this funtion with new next directory
+
+
             pass
             #TODO extend somehow
 
@@ -216,12 +222,12 @@ class Volume:
         dirDet = self.DIRECTORY_ICON + str(dirName).ljust(self.MAX_FILE_NAME_SIZE, ' ')+' '+('0'*4)+':'+((('0'*3)+' ')*self.MAX_FILE_BLOCK_USE)
 
         #Add new block allocation to parent
-        posFileDetail = dirDet[self.POSITION_3_DIGIT:(detPosInBlock + self.TOTAL_FILE_DETAIL_SIZE-1)]
+        posFileDetail = dirDet[self.POSITION_3_DIGIT:(detPosInBlock + self.TOTAL_FILE_DETAIL_SIZE)]
         posFileDetail = posFileDetail.replace('0' * 3, str(blkNum).rjust(3, '0'), 1)
+
         dirDet = dirDet[:self.POSITION_3_DIGIT]+posFileDetail
 
         fullParentDirDet = parentDirData[:detPosInBlock] + dirDet + parentDirData[(detPosInBlock+self.TOTAL_FILE_DETAIL_SIZE):]
-
 
         return fullParentDirDet
 

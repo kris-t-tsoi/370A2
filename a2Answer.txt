@@ -18,9 +18,6 @@ Q2.
 
 
 Q3.
-
-
-
 No it would no work in parallel because my solution only uses one instance of volume
 An example of this is if one thread was to create a file into a directory but
 then another thread were to delete the thread. Either the file will be created so the directory

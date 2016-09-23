@@ -14,7 +14,19 @@ class TinyDOS:
     driveInst = None
     volumeInst = None
 
-    def recurDOSFile(self, gpBlkNum, needChildBlkNum=False, path=None):
+    def getAllocatedBlocks(self, fileDet):
+
+        # get blocks allocated to file and split into array of allocations
+        blksAllocated = fileDet[self.volumeInst.POSITION_3_DIGIT:]
+        blkList = str(blksAllocated).split(' ')  # note has extra '' at last index as there was space
+
+        return blkList
+
+
+
+
+    #path is userPathFile[:-1] (so path does not contain the child (dir/fil that is to be read/written/made to
+    def recurDOSFile(self, gpBlkNum,path=None,isFile = False):
 
         print("recursive")
 
@@ -30,89 +42,263 @@ class TinyDOS:
 
         print("gp blk: " + str(gpBlkNum))
 
-        print(str(directoryDetail))
-        print("argument 1 " + path[1])
+        #
+        if len(path) > 2 :
 
-        # use glbGrandParentdet to get all bloks allocated to GPDirect
-        # check if parent file or directory is in the directory
-        if path[1] in directoryDetail:
+            print(str(directoryDetail))
+            print("argument 1 " + path[1])
 
-            dirDetPosInBlock = str(directoryDetail).find(path[1]) - self.volumeInst.FILE_ICON_SIZE
-            dirDet = self.volumeInst.getFileDetail(path[1], directoryDetail)
+            #if existing diretory
+            if path[0] in directoryDetail:
 
-            # get 4dig rep length
-            dirLen = int(dirDet[self.volumeInst.POSITION_FILE_LENGTH:(self.volumeInst.POSITION_FILE_LENGTH + 4)])
+                if self.isDirectory(directoryDetail,path[1]):
 
-            # divide to find how many files are used
-            index = int(dirLen / self.driveInst.BLK_SIZE)
+                    print("in")
 
-            lastDataLen = int(dirLen % self.driveInst.BLK_SIZE)
+                    #get position
+                    dirDetPosInBlock = str(directoryDetail).find(path[1]) - self.volumeInst.FILE_ICON_SIZE
 
-            # get blocks allocated to file and split into array of allocations
-            blksAllocated = dirDet[self.volumeInst.POSITION_3_DIGIT:]
-            blkList = str(blksAllocated).split(' ')  # note has extra '' at last index as there was space
+                    #get file detail
+                    dirDet = self.volumeInst.getFileDetail(path[1], directoryDetail)
 
-            blkNum = ''
+                    # get 4dig rep length
+                    dirLen = int(
+                        dirDet[self.volumeInst.POSITION_FILE_LENGTH:(self.volumeInst.POSITION_FILE_LENGTH + 4)])
 
-            # print("make: "+ str(make))
+                    # divide to find how many files are used
+                    index = int(dirLen / self.driveInst.BLK_SIZE)
 
-            # if make == True and len(path) == 3:
-            #     blkNum = int(blkList[index])
+                    lastDataLen = int(dirLen % self.driveInst.BLK_SIZE)
 
 
-            # if needChildBlkNum == True or len(path) != 3:
-            if len(path) != 3:
-                # check if found
-                found = False
+                    print("index "+str(index))
+                    print("lastDataLen "+str(lastDataLen))
 
-                # loop through all blocks allocated to GP direct
-                for x in range(0, (index + 1)):
-                    blkNum = int(blkList[x])
-                    findParData = self.driveInst.read_block(blkNum)
+                    if lastDataLen != 0 :#and isFile == False:
+                        index= index + 1
 
-                    # Find blkNum allocaked to GP that contains parent
-                    if path[2] in findParData:
-                        found = True
 
-                        print("p blk: " + str(blkNum))
+                    # get blocks allocated to file and split into array of allocations
+                    blkList = self.getAllocatedBlocks(dirDet)
 
-                if found == False:
-                    raise IOError("This file path does not exist")
-            else:
-                blkNum = int(blkList[index])
+                    print("block allocation")
+                    print(blkList)
 
-            self.volumeInst.glbParentBlkNum = blkNum
-            self.volumeInst.glbGrandParentBlkNum = gpBlkNum
+                    found = False
 
-            if needChildBlkNum == True and len(path) == 3:
-                # if going all the way to last child then store parent and grandparent details now before the get changed
-                self.volumeInst.glbGrandParentdet = self.driveInst.read_block(self.volumeInst.glbGrandParentBlkNum)
-                self.volumeInst.glbParentdet = self.driveInst.read_block(self.volumeInst.glbParentBlkNum)
-                self.volumeInst.childBlkNum = self.volumeInst.recursiveFile(self.volumeInst.glbParentBlkNum,
-                                                                            needChildBlkNum=needChildBlkNum,
-                                                                            path=path)
+                    # loop through all blocks allocated to GP direct
+                    for x in range(0, (index + 1)):
+                        blkNum = int(blkList[x])
+                        findParData = self.driveInst.read_block(blkNum)
 
-            # if still need to go through path, return parentblk number
-            if len(path) != 3:
-                return self.recurDOSFile(self.volumeInst.glbParentBlkNum, needChildBlkNum=needChildBlkNum,
-                                         path=path[1:])
+                        if blkNum == 0:
+                            break
 
-            else:
-                # if not yet saved
-                if needChildBlkNum == False:
-                    self.volumeInst.glbGrandParentdet = self.driveInst.read_block(
-                        self.volumeInst.glbGrandParentBlkNum)
+                        # Find blkNum allocaked to GP that contains parent
+                        if path[1] in findParData:
+                            print("p blk: " + str(blkNum))
+
+                            self.volumeInst.glbParentBlkNum = blkNum
+                            self.volumeInst.glbGrandParentBlkNum = gpBlkNum
+
+                            print("grandparent now changed to: " + str(self.volumeInst.glbGrandParentBlkNum))
+                            print("parent now changed to: " + str(self.volumeInst.glbParentBlkNum))
+
+                            break
+
+
+
+                    if found == False:
+                        raise IOError("This file path does not exist")
+
+                    self.volumeInst.glbGrandParentdet = self.driveInst.read_block(self.volumeInst.glbGrandParentBlkNum)
                     self.volumeInst.glbParentdet = self.driveInst.read_block(self.volumeInst.glbParentBlkNum)
 
-                print("grandparent now changed to: " + str(self.volumeInst.glbGrandParentBlkNum))
-                print("parent now changed to: " + str(self.volumeInst.glbParentBlkNum))
+                    #find next gp and p in path
+                    return self.recurDOSFile(self.volumeInst.glbParentBlkNum, path[1:],isFile=isFile)
 
-                print("return " + str(self.volumeInst.glbParentBlkNum))
-                return self.volumeInst.glbParentBlkNum
+                #is a file type
+                else:
+                    raise IOError("Path is invalid, can not have a file type within path")
+            #name not exist in dir detail
+            else:
+                raise IOError("Path is invalid")
+
+        elif gpBlkNum == 0:
+
+            # if existing diretory
+            if path[0] in directoryDetail:
+
+                if self.isDirectory(directoryDetail, path[0]):
+
+                    print("in")
+
+                    # get position
+                    dirDetPosInBlock = str(directoryDetail).find(path[0]) - self.volumeInst.FILE_ICON_SIZE
+
+                    # get file detail
+                    dirDet = self.volumeInst.getFileDetail(path[0], directoryDetail)
+
+                    # get 4dig rep length
+                    dirLen = int(
+                        dirDet[self.volumeInst.POSITION_FILE_LENGTH:(self.volumeInst.POSITION_FILE_LENGTH + 4)])
+
+                    # divide to find how many block are used
+                    index = int(dirLen / self.driveInst.BLK_SIZE)
+
+                    lastDataLen = int(dirLen % self.driveInst.BLK_SIZE)
+
+                    print("index " + str(index))
+                    print("lastDataLen " + str(lastDataLen))
+
+                    #if next file is not full
+                    if lastDataLen != 0:# and isFile == False:
+                        index = index + 1
+
+
+                    # get blocks allocated to file and split into array of allocations
+                    blkList = self.getAllocatedBlocks(dirDet)
+
+                    print("block allocation")
+                    print(blkList)
+
+                    parentBlk= 0
+
+                    if int(blkList[index]) == 0:
+                        # get first free block block to be written to
+                        parentBlk = self.volumeInst.nextAvaiableBlock()
+                    else:
+                        parentBlk = int(blkList[index])
+
+                    print("parent")
+                    print(parentBlk)
+
+
+                    self.volumeInst.glbParentBlkNum = parentBlk
+                    self.volumeInst.glbGrandParentBlkNum = gpBlkNum
+
+
+                    print("grandparent now changed to: " + str(self.volumeInst.glbGrandParentBlkNum))
+                    print("parent now changed to: " + str(self.volumeInst.glbParentBlkNum))
+
+
+                    self.volumeInst.glbGrandParentdet = self.driveInst.read_block(self.volumeInst.glbGrandParentBlkNum)
+                    self.volumeInst.glbParentdet = self.driveInst.read_block(self.volumeInst.glbParentBlkNum)
+
+                    # return parent blk num
+                    return self.volumeInst.glbParentBlkNum
+
+                else:
+                    raise IOError("Path incorrect, can not use file as directory")
+
 
 
         else:
-            raise IOError("This file path does not exist")
+
+            print("return parent")
+            #return parent blk number
+            return self.volumeInst.glbParentBlkNum
+            pass
+
+
+        # def recurFile(self, gpBlkNum, needChildBlkNum=False, path=None):
+        #
+        #     print("recursive")
+        #
+        #     print("path length: " + str(len(path)))
+        #     print(str(path))
+        #
+        #     # get grandparent directory block allocations det from blk
+        #     self.volumeInst.glbGrandParentdet = self.driveInst.read_block(gpBlkNum)
+        #
+        #     # reads directory data
+        #     directoryDetail = self.volumeInst.glbGrandParentdet
+        #
+        #     print("gp blk: " + str(gpBlkNum))
+        #
+        #     print(str(directoryDetail))
+        #     print("argument 1 " + path[1])
+        #
+        #     # use glbGrandParentdet to get all bloks allocated to GPDirect
+        #     # check if parent file or directory is in the directory
+        #     if path[1] in directoryDetail:
+        #
+        #         dirDetPosInBlock = str(directoryDetail).find(path[1]) - self.volumeInst.FILE_ICON_SIZE
+        #         dirDet = self.volumeInst.getFileDetail(path[1], directoryDetail)
+        #
+        #         # get 4dig rep length
+        #         dirLen = int(dirDet[self.volumeInst.POSITION_FILE_LENGTH:(self.volumeInst.POSITION_FILE_LENGTH + 4)])
+        #
+        #         # divide to find how many files are used
+        #         index = int(dirLen / self.driveInst.BLK_SIZE)
+        #
+        #         lastDataLen = int(dirLen % self.driveInst.BLK_SIZE)
+        #
+        #         # get blocks allocated to file and split into array of allocations
+        #         blksAllocated = dirDet[self.volumeInst.POSITION_3_DIGIT:]
+        #         blkList = str(blksAllocated).split(' ')  # note has extra '' at last index as there was space
+        #
+        #         blkNum = ''
+        #
+        #         # print("make: "+ str(make))
+        #
+        #         # if make == True and len(path) == 3:
+        #         #     blkNum = int(blkList[index])
+        #
+        #
+        #         # if needChildBlkNum == True or len(path) != 3:
+        #         if len(path) != 3:
+        #             # check if found
+        #             found = False
+        #
+        #             # loop through all blocks allocated to GP direct
+        #             for x in range(0, (index + 1)):
+        #                 blkNum = int(blkList[x])
+        #                 findParData = self.driveInst.read_block(blkNum)
+        #
+        #                 # Find blkNum allocaked to GP that contains parent
+        #                 if path[2] in findParData:
+        #                     found = True
+        #
+        #                     print("p blk: " + str(blkNum))
+        #
+        #             if found == False:
+        #                 raise IOError("This file path does not exist")
+        #         else:
+        #             blkNum = int(blkList[index])
+        #
+        #         self.volumeInst.glbParentBlkNum = blkNum
+        #         self.volumeInst.glbGrandParentBlkNum = gpBlkNum
+        #
+        #         if needChildBlkNum == True and len(path) == 3:
+        #             # if going all the way to last child then store parent and grandparent details now before the get changed
+        #             self.volumeInst.glbGrandParentdet = self.driveInst.read_block(self.volumeInst.glbGrandParentBlkNum)
+        #             self.volumeInst.glbParentdet = self.driveInst.read_block(self.volumeInst.glbParentBlkNum)
+        #             self.volumeInst.childBlkNum = self.volumeInst.recursiveFile(self.volumeInst.glbParentBlkNum,
+        #                                                                         needChildBlkNum=needChildBlkNum,
+        #                                                                         path=path)
+        #
+        #         # if still need to go through path, return parentblk number
+        #         if len(path) != 3:
+        #             return self.recurDOSFile(self.volumeInst.glbParentBlkNum, needChildBlkNum=needChildBlkNum,
+        #                                      path=path[1:])
+        #
+        #         else:
+        #             # if not yet saved
+        #             if needChildBlkNum == False:
+        #                 self.volumeInst.glbGrandParentdet = self.driveInst.read_block(
+        #                     self.volumeInst.glbGrandParentBlkNum)
+        #                 self.volumeInst.glbParentdet = self.driveInst.read_block(self.volumeInst.glbParentBlkNum)
+        #
+        #             print("grandparent now changed to: " + str(self.volumeInst.glbGrandParentBlkNum))
+        #             print("parent now changed to: " + str(self.volumeInst.glbParentBlkNum))
+        #
+        #             print("return " + str(self.volumeInst.glbParentBlkNum))
+        #             return self.volumeInst.glbParentBlkNum
+        #
+        #
+        #     else:
+        #         return self.volumeInst.glbParentBlkNum
 
     # -----------------------------------------------------------------------------------------------------------------------
     def format(self):
@@ -246,6 +432,9 @@ class TinyDOS:
             args = pathname.split('/')
             fileName = args[len(args) - 1]
 
+            print("args is")
+            print(args)
+
             # set default directory block number where file is to be created in
             directoryDetBlkNum = 0
 
@@ -257,11 +446,19 @@ class TinyDOS:
 
             # todo if nested directory, find blk where directory detail is stored
             if len(args) != 2:
-                directoryDetBlkNum = self.recurDOSFile(0,needChildBlkNum=False,path=args)
+                directoryDetBlkNum = self.recurDOSFile(0,path=args[1:-1], isFile = True)
                 pass
+
+            print("mkfile parent dir blk num "+str(directoryDetBlkNum))
 
             # reads directory data
             dirDet = self.driveInst.read_block(directoryDetBlkNum)
+
+            self.updateBitMap()
+
+            if dirDet == self.driveInst.EMPTY_BLK:
+                dirDet = self.volumeInst.createDirectoryFormat()
+                self.driveInst.write_block(directoryDetBlkNum,dirDet)
 
             # check if file or directory of same name is in the directory
             if fileName in dirDet:
@@ -311,38 +508,52 @@ class TinyDOS:
             #reset data to write to ''
             self.volumeInst.dataToWrite = ''
 
-            # if nested directory, find blk where directory detail is stored
+            # todo if nested directory, find blk where directory detail is stored
             if len(args) != 2:
-                #TODO find directoryDetBlkNum
-                directoryDetBlkNum = self.recurDOSFile(0, needChildBlkNum=False, path=args)
-                blockNumber = self.volumeInst.glbGrandParentBlkNum
+                directoryDetBlkNum = self.recurDOSFile(0, path=args[1:-1],isFile = False)
                 pass
 
-            #reads directory data
-            directoryDetail = self.driveInst.read_block(directoryDetBlkNum)
+            print("mkfile parent dir blk num " + str(directoryDetBlkNum))
 
-            #check if file or directory of same name is in the directory
-            if fileName in directoryDetail:
+            # reads directory data
+            dirDet = self.driveInst.read_block(directoryDetBlkNum)
+
+            #update bitmap
+            self.updateBitMap()
+
+            if dirDet == self.driveInst.EMPTY_BLK:
+                dirDet = self.volumeInst.createDirectoryFormat()
+                self.driveInst.write_block(directoryDetBlkNum, dirDet)
+
+            # check if file or directory of same name is in the directory
+            if fileName in dirDet:
                 raise IOError("Sorry you can not have the same named file/directory within a single directory")
-
             else:
-                # get bitmap details if not block 0
+                # get bitmap details
                 if directoryDetBlkNum != 0:
                     self.volumeInst.dataRead = self.driveInst.read_block(0)
 
+                print("blk detail: " + str(int(directoryDetBlkNum)))
+                print(dirDet)
 
-                print("blk detail: "+str(int(directoryDetBlkNum)))
-                print(directoryDetail)
-
-
-                directoryDetail = self.volumeInst.makeDir(fileName,directoryDetBlkNum,directoryDetail)
+                # pass in file name and directly blk number into volume to create data to write
+                directoryDetail = self.volumeInst.makeDir(fileName, directoryDetBlkNum, dirDet)
                 newDirData = self.volumeInst.extraReturn
                 newDirBlkNum = self.volumeInst.childBlkNum
+
+
+                print("detail: after create" + str(int(directoryDetBlkNum)))
+                print(directoryDetail)
 
                 #write new dir data into directory
                 self.driveInst.write_block(int(newDirBlkNum),newDirData)
                 self.driveInst.write_block(directoryDetBlkNum,directoryDetail)
 
+                # update bitmap
+                if directoryDetBlkNum != 0:
+                    self.driveInst.write_block(0, self.volumeInst.dataToWrite)
+
+                #if need to change file length of grandparent direct det
                 if len(args) != 2:
                     parentName = args[len(args) - 2]
                     detPosInBlock = str(self.volumeInst.glbGrandParentdet).find(parentName) - self.volumeInst.FILE_ICON_SIZE
@@ -656,6 +867,27 @@ class TinyDOS:
         else:
 
             return False
+
+
+    # -----------------------------------------------------------------------------------------------------------------------
+    def isDirectory(self,parentBlkDet, name):
+
+        # find where file name was written in the block detail string
+        namePos = str(parentBlkDet).find(name)
+
+        # get position of file details   TODO will need ot change once do nested directorys
+        icon = parentBlkDet[(namePos - self.volumeInst.FILE_ICON_SIZE):namePos]
+
+        print(str(icon)+'*')
+
+        return str(icon) ==  str(self.volumeInst.DIRECTORY_ICON)
+
+
+    def updateBitMap(self):
+        # update bitmap in block 0
+        blk0data = self.driveInst.read_block(0)
+        self.volumeInst.updateBlk0BitmapToBeWritten(blk0data)
+        self.driveInst.write_block(0, self.volumeInst.dataToWrite)
 
 
     # -----------------------------------------------------------------------------------------------------------------------
