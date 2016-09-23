@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d00d3954-b7ee-4bf8-ad86-cad9c54abd76" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/TinyDOS.py" afterPath="$PROJECT_DIR$/TinyDOS.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/b" afterPath="$PROJECT_DIR$/b" />
     </list>
     <ignored path="370A2.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -67,8 +69,8 @@
       <file leaf-file-name="TinyDOS.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/TinyDOS.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="540">
-              <caret line="619" column="37" selection-start-line="619" selection-start-column="37" selection-end-line="619" selection-end-column="37" />
+            <state relative-caret-position="390">
+              <caret line="635" column="20" selection-start-line="635" selection-start-column="20" selection-end-line="635" selection-end-column="53" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
@@ -848,8 +850,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/TinyDOS.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="540">
-          <caret line="619" column="37" selection-start-line="619" selection-start-column="37" selection-end-line="619" selection-end-column="37" />
+        <state relative-caret-position="390">
+          <caret line="635" column="20" selection-start-line="635" selection-start-column="20" selection-end-line="635" selection-end-column="53" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
           </folding>

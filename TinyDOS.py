@@ -509,6 +509,8 @@ class TinyDOS:
 
         print("in")
 
+        print(pdirDet)
+
         # get position
         dirDetPosInBlock = str(pdirDet).find(pDirName) - self.volumeInst.FILE_ICON_SIZE
 
@@ -569,9 +571,6 @@ class TinyDOS:
             print("mkfile parent dir blk num " + str(directoryDetBlkNum))
             writeblkNum = directoryDetBlkNum
 
-            # if self.volumeInst.childBlkNum != '':
-            #     writeblkNum = self.volumeInst.childBlkNum
-
             dirDet = self.driveInst.read_block(writeblkNum)
 
             #update bitmap
@@ -597,6 +596,20 @@ class TinyDOS:
                 newDirData = self.volumeInst.extraReturn
                 newDirBlkNum = self.volumeInst.childBlkNum
 
+                #todo fix
+                if len(args) > 3:
+                    print("find child")
+                    print(args[-2])
+                    print(args[-1])
+                    print(directoryDetail)
+                    self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2],directoryDetail,args[-1])
+                    self.volumeInst.glbGrandParentBlkNum = self.volumeInst.glbParentBlkNum
+                    print("Child plk num = "+str(self.volumeInst.childBlkNum))
+
+
+                if self.volumeInst.childBlkNum != '':
+                    writeblkNum = self.volumeInst.childBlkNum
+
 
                 print("detail: after create" + str(int(directoryDetBlkNum)))
                 print(directoryDetail)
@@ -612,12 +625,26 @@ class TinyDOS:
                 #if need to change file length of grandparent direct det
                 if len(args) != 2:
 
+                    blknumWrite = self.volumeInst.glbGrandParentBlkNum
+                    if self.volumeInst.childBlkNum != '':
+                        blknumWrite = self.volumeInst.glbParentBlkNum
+
+
+                    print("gp blk num")
+                    print(blknumWrite)
+
+                    self.volumeInst.glbGrandParentdet = self.driveInst.read_block(self.volumeInst.glbGrandParentBlkNum)
+
+
                     parentName = args[len(args) - 2]
                     detPosInBlock = str(self.volumeInst.glbGrandParentdet).find(parentName) - self.volumeInst.FILE_ICON_SIZE
                     gpdata = self.volumeInst.glbGrandParentdet
 
+                    print("parentName ")
+                    print(parentName)
 
-                    print("gp data " )
+
+                    print("p data " )
                     print(gpdata)
 
                     fileDet = self.volumeInst.getFileDetail(parentName, gpdata)
