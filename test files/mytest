@@ -8,4 +8,4 @@ mkdir /dir1/dir2
 
 mkdir /dir1/dir2/file2
 
-mkdir /dir1/dir2/file3
+mkdir /dir1/dir2/file2/file3
