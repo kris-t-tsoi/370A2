@@ -42,8 +42,9 @@ class TinyDOS:
 
         print("gp blk: " + str(gpBlkNum))
 
+
         #
-        if len(path) > 2 :
+        if len(path) > 2:
 
             print(str(directoryDetail))
             print("argument 1 " + path[1])
@@ -361,7 +362,7 @@ class TinyDOS:
             # todo if nested directory, find blk where directory detail is stored
             if len(args) != 2:
                 directoryDetBlkNum = self.recurDOSFile(0,path=args[1:-1], isFile = True)
-                self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2],self.volumeInst.glbParentdet,args[-1])
+                self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2],self.volumeInst.glbParentdet)
                 print("Child plk num = "+str(self.volumeInst.childBlkNum))
                 pass
 
@@ -407,7 +408,7 @@ class TinyDOS:
 
 
     # -----------------------------------------------------------------------------------------------------------------------
-    def findChildBlkNum(self,pDirName, pdirDet,filename):
+    def findChildBlkNum(self,pDirName, pdirDet):
 
         print("in find child blk num")
 
@@ -465,50 +466,101 @@ class TinyDOS:
 
             # todo if nested directory, find blk where directory detail is stored
             if len(args) != 2:
-                directoryDetBlkNum = self.recurDOSFile(0, path=args[1:-1], isFile=True)
+                directoryDetBlkNum = self.recurDOSFile(0, path=args[1:-1], isFile=False)
+
+                if len(args)>3:
+
+                    print("parent name")
+                    print(args[-2])
+                    print("parent blk detail: " + str(int(directoryDetBlkNum)))
+                    print(self.volumeInst.glbParentdet)
+
+                    self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2],self.volumeInst.glbParentdet)
+
+                    print("child blk")
+
+                    print(self.volumeInst.childBlkNum )
 
 
             print("parent dir blk num " + str(directoryDetBlkNum))
             print("grandparent dir blk num " + str(self.volumeInst.glbGrandParentBlkNum))
 
+            print("parent blk detail: " + str(int(directoryDetBlkNum)))
+            print(self.volumeInst.glbParentdet)
+
 
             writeblkNum = directoryDetBlkNum
 
-            # if self.volumeInst.childBlkNum != '':
-            #     writeblkNum = self.volumeInst.childBlkNum
+            if self.volumeInst.childBlkNum != '':
+                writeblkNum = self.volumeInst.childBlkNum
+
 
             dirDet = self.driveInst.read_block(writeblkNum)
+
+            print("get blk detail: " + str(int(writeblkNum)))
+            print(dirDet)
 
             #update bitmap
             self.updateBitMap()
 
-            if dirDet == self.driveInst.EMPTY_BLK:
-                dirDet = self.volumeInst.createDirectoryFormat()
-                self.driveInst.write_block(directoryDetBlkNum, dirDet)
+            # if dirDet == self.driveInst.EMPTY_BLK:
+            #     dirDet = self.volumeInst.createDirectoryFormat()
+            #
+            #     print("**********************8")
+            #     print("blk is empty and filled "+str(writeblkNum))
+            #     print(dirDet)
+            # self.driveInst.write_block(writeblkNum, dirDet)
+
+            # print("blk detail after write: " + str(int(directoryDetBlkNum)))
+            # print(dirDet)
+
+            # if self.volumeInst.childBlkNum != '':
+            #     writeblkNum = self.volumeInst.childBlkNum
+            #
+            # dirDet = self.driveInst.read_block(writeblkNum)
+            #
+            # # update bitmap
+            # self.updateBitMap()
+            #
+            # if dirDet == self.driveInst.EMPTY_BLK:
+            #     dirDet = self.volumeInst.createDirectoryFormat()
+            #
+            #
+            #
+            #
+            #     print("blk is empty and filled "+str(writeblkNum))
+            #     print(dirDet)
+            #     self.driveInst.write_block(writeblkNum, dirDet)
+
+
 
             # check if file or directory of same name is in the directory
             if fileName in dirDet:
                 raise IOError("Sorry you can not have the same named file/directory within a single directory")
             else:
+
+
                 # get bitmap details
                 if directoryDetBlkNum != 0:
                     self.volumeInst.dataRead = self.driveInst.read_block(0)
-
-                print("blk detail: " + str(int(directoryDetBlkNum)))
-                print(dirDet)
 
                 # pass in file name and directly blk number into volume to create data to write
                 directoryDetail = self.volumeInst.makeDir(fileName, directoryDetBlkNum, dirDet)
                 newDirData = self.volumeInst.extraReturn
                 newDirBlkNum = self.volumeInst.childBlkNum
 
+                print("newDirBlkNum " + str(int(newDirBlkNum)))
+                print(newDirData)
 
-                print("detail: after create" + str(int(directoryDetBlkNum)))
+
+                print("detail: after create" + str(int(writeblkNum)))
                 print(directoryDetail)
 
                 #write new dir data into directory
                 self.driveInst.write_block(int(newDirBlkNum),newDirData)
-                self.driveInst.write_block(directoryDetBlkNum,directoryDetail)
+                self.driveInst.write_block(writeblkNum,directoryDetail)
+
+                print("-------------------writeen ----------------")
 
                 # update bitmap
                 if directoryDetBlkNum != 0:
@@ -518,12 +570,32 @@ class TinyDOS:
                 if len(args) != 2:
 
                     parentName = args[len(args) - 2]
-                    detPosInBlock = str(self.volumeInst.glbGrandParentdet).find(parentName) - self.volumeInst.FILE_ICON_SIZE
+
+                    print("parent ")
+                    print(parentName)
+
+
+
+
                     gpdata = self.volumeInst.glbGrandParentdet
+                    gpBlkNum = self.volumeInst.glbGrandParentBlkNum
+
+                    if len(args)>3:
+                        print("change to parent")
+                        gpdata = self.volumeInst.glbParentdet
+                        gpBlkNum = self.volumeInst.glbParentBlkNum
+
+                    detPosInBlock = str(gpdata).find(parentName) - self.volumeInst.FILE_ICON_SIZE
 
 
                     print("gp data " )
                     print(gpdata)
+
+                    print("pos is gp data ")
+                    print(detPosInBlock)
+
+                    print("blk to write ")
+                    print(gpBlkNum)
 
                     fileDet = self.volumeInst.getFileDetail(parentName, gpdata)
 
@@ -536,9 +608,12 @@ class TinyDOS:
 
                     toWriteGP =directoryDetail = gpdata[:detPosInBlock]+fileDet+gpdata[(detPosInBlock+self.volumeInst.TOTAL_FILE_DETAIL_SIZE):]
 
-                    self.driveInst.write_block(self.volumeInst.glbGrandParentBlkNum,toWriteGP)
+                    print("gp data to write")
+                    print(toWriteGP)
 
-                    if self.volumeInst.glbGrandParentBlkNum == 0:
+                    self.driveInst.write_block(gpBlkNum,toWriteGP)
+
+                    if gpBlkNum == 0:
                         self.volumeInst.dataToWrite = self.driveInst.read_block(0)
 
 
