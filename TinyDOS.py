@@ -54,9 +54,9 @@ class TinyDOS:
 
                 if self.isDirectory(directoryDetail,path[1],path[0]):
 
-                    print("in")
+                    print("in multi")
 
-
+                    #TODO fix this
                     if path[1] not in directoryDetail:
 
                         # get position
