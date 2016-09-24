@@ -343,6 +343,8 @@ class TinyDOS:
 
             print("args size "+str(len(args)))
 
+            print(args)
+
             # set default directory block number where file is to be created in
             directoryDetBlkNum = 0
 
@@ -353,12 +355,14 @@ class TinyDOS:
             self.volumeInst.dataToWrite = ''
 
             #if root
-            if len(args) == 2:
+            if len(args) == 2 and args[1] == '':
+
+                print("in root")
 
                 # reads directory data
                 dirDet = self.driveInst.read_block(directoryDetBlkNum)
 
-                if self.checkIfDirectoryEmpty(dirDet,isRoot=True) == True:
+                if self.checkIfDirectoryEmpty(dirDet,'',isRoot=True) == True:
                     raise IOError("Directory " + str(pathname) + " has no files")
 
                 else:
@@ -368,48 +372,115 @@ class TinyDOS:
                     else:
                         for x in range(0,6):
 
-                            name = dirDet[self.driveInst.DRIVE_SIZE+(x*self.volumeInst.TOTAL_FILE_DETAIL_SIZE):self.driveInst.DRIVE_SIZE+(x*self.volumeInst.TOTAL_FILE_DETAIL_SIZE)+2+self.volumeInst.MAX_FILE_NAME_SIZE]
+                            name = dirDet[self.driveInst.DRIVE_SIZE+(x*self.volumeInst.TOTAL_FILE_DETAIL_SIZE):
+                                            self.driveInst.DRIVE_SIZE+(x*self.volumeInst.TOTAL_FILE_DETAIL_SIZE)+2+self.volumeInst.MAX_FILE_NAME_SIZE]
+                            size = int(dirDet[self.driveInst.DRIVE_SIZE+(x*self.volumeInst.TOTAL_FILE_DETAIL_SIZE)+self.volumeInst.POSITION_FILE_LENGTH:
+                                            (self.volumeInst.POSITION_FILE_LENGTH + 4)+self.driveInst.DRIVE_SIZE+(x*self.volumeInst.TOTAL_FILE_DETAIL_SIZE)])
+
 
                             if ('f:'+' '*8) == name or ('d:'+' '*8) == name:
                                 pass
                             else:
-                                #TODO get size of file and directory
 
-                                print(str(name))
+                                print(str(name)+' has Size: '+str(size))
 
 
             else:
 
                 dirName = args[len(args) - 1]
 
+                print("dir name")
+                print(dirName)
+
+                parenttblk = 0
+
                 # todo if nested directory, find blk where directory detail is stored
                 if len(args) != 2:
-                    # directoryDetBlkNum = self.recurDOSFile(0, needChildBlkNum=True, path=args)
-                    pass
+                    directoryDetBlkNum = self.recurDOSFile(0, path=args[1:-1], isFile=False)
+
+                #
+                # if len(args) >3 :
+                #     parenttblk = 0
+                # # elif len(args) ==2 :
+                # #     parenttblk = 0
+                # #     pass
+                # else:
+                #     directoryDetBlkNum = self.findChildBlkNum(args[-2], self.volumeInst.glbGrandParentdet)
+
+                print("parent blk num")
+                print(self.volumeInst.glbParentBlkNum)
+
+                print("parent details")
+                print(self.volumeInst.glbParentdet)
+
+                print("Grandparent blk num")
+                print(self.volumeInst.glbGrandParentBlkNum)
+
+                print("Grandparent details")
+                print(self.volumeInst.glbGrandParentdet)
+
+
+                gparentDet =''
+
+                if len(args) < 3:
+                    self.volumeInst.childBlkNum = self.findChildBlkNum(dirName, self.volumeInst.glbGrandParentdet)
+                    gparentDet = self.volumeInst.glbGrandParentdet
+                else:
+                    self.volumeInst.childBlkNum = self.findChildBlkNum(dirName, self.volumeInst.glbParentdet)
+                    gparentDet = self.volumeInst.glbParentdet
+
 
                 # reads directory data
-                dirDet = self.driveInst.read_block(directoryDetBlkNum)
+                # dirDet = self.driveInst.read_block(self.volumeInst.childBlkNum)
 
-                if self.checkIfDirectoryEmpty(dirDet,isRoot=True) == True:
+                # print("child blk num")
+                # print(self.volumeInst.childBlkNum)
+                #
+                # print("details")
+                # print(dirDet)
+
+
+                # self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2], directoryDetBlkNum)
+                #
+                # self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2], parenttblk)
+
+
+
+                if self.checkIfDirectoryEmpty(gparentDet,dirName, isRoot=True) == True:
                     raise IOError("Directory " + str(pathname) + " has no files")
 
                 else:
 
                     #TODO change and go through all blk for dir as can have more than one blk
 
-                    if len((' ' * 9 in dirDet)) == 6:
-                        raise IOError("Root Directory has no files")
-                    else:
+                    # get allocated blks
 
+                    fileDetPosInBlock = str(gparentDet).find(dirName) - self.volumeInst.FILE_ICON_SIZE
+                    fileDet = self.volumeInst.getFileDetail(dirName, gparentDet)
 
-                        for x in range(0, 6):
+                    # get blocks allocated to directory and split into array of allocations
+                    blksAllocated = fileDet[self.volumeInst.POSITION_3_DIGIT:]
+                    blkList = str(blksAllocated).split(' ')  # note has extra '' at last index as there was space
 
-                            name = dirDet[self.driveInst.DRIVE_SIZE + (
-                            x * self.volumeInst.TOTAL_FILE_DETAIL_SIZE) + 2:self.driveInst.DRIVE_SIZE + (
-                            x * self.volumeInst.TOTAL_FILE_DETAIL_SIZE) + 2 + self.volumeInst.MAX_FILE_NAME_SIZE]
+                    for x in range(0, 12):
+                        blknum = int(blkList[x])
 
-                            if (' ' * 8) != name:
-                                print(str(name))
+                        if blknum != 0:
+
+                            #read data in that block
+                            dirDet = self.driveInst.read_block(blknum)
+
+                            for y in range(0,8):
+
+                                name = dirDet[(y * self.volumeInst.TOTAL_FILE_DETAIL_SIZE):(y * self.volumeInst.TOTAL_FILE_DETAIL_SIZE) + 2 + self.volumeInst.MAX_FILE_NAME_SIZE]
+
+                                size =int(dirDet[(y*self.volumeInst.TOTAL_FILE_DETAIL_SIZE)+self.volumeInst.POSITION_FILE_LENGTH:
+                                                (self.volumeInst.POSITION_FILE_LENGTH + 4)+(y*self.volumeInst.TOTAL_FILE_DETAIL_SIZE)])
+
+                                if ('f:' + ' ' * 8) == name or ('d:' + ' ' * 8) == name:
+                                    pass
+                                else:
+                                    print(str(name) + ' has Size: ' + str(size))
 
 
         pass
@@ -872,9 +943,14 @@ class TinyDOS:
             self.volumeInst.childBlkNum = ''
 
             if len(args) != 2:
-                directoryDetBlkNum = self.recurDOSFile(0, path=args[1:-1], isFile=True)
+                directoryDetBlkNum = self.recurDOSFile(0, path=args[1:-1], isFile=True) #todo fix
+
+                if len(args) ==3:
+                    directoryDetBlkNum = 0
+
                 detail = self.driveInst.read_block(directoryDetBlkNum)
                 self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2], detail)
+
 
             writeblkNum = directoryDetBlkNum
 
@@ -895,6 +971,8 @@ class TinyDOS:
                 #get blocks allocated to file and split into array of allocations
                 blksAllocated = fileDet[self.volumeInst.POSITION_3_DIGIT:]
                 blkList = str(blksAllocated).split(' ') #note has extra '' at last index as there was space
+
+                print(blkList)
 
                 bitmap = self.volumeInst.driveBlock0BitMap
 
@@ -1003,18 +1081,34 @@ class TinyDOS:
         sys.exit(0)
 
      # -----------------------------------------------------------------------------------------------------------------------
-    def checkIfDirectoryEmpty(self, blkData, isRoot = False):
+    def checkIfDirectoryEmpty(self, blkData, dirName, isRoot = False):
 
         index = 8
 
         if isRoot == True:
             index = 6
+            if blkData.count(' ' * 9) == index:
+                return True;
+            else:
 
-        if blkData.count(' ' * 9) == index:
-            return True;
+                return False
         else:
+            #get allocated blks
 
-            return False
+            fileDetPosInBlock = str(blkData).find(dirName) - self.volumeInst.FILE_ICON_SIZE
+            fileDet = self.volumeInst.getFileDetail(dirName, blkData)
+
+            # get blocks allocated to directory and split into array of allocations
+            blksAllocated = fileDet[self.volumeInst.POSITION_3_DIGIT:]
+            blkList = str(blksAllocated).split(' ')  # note has extra '' at last index as there was space
+
+            for x in range(0, 12):
+                if int(blkList[x]) == 0:
+                    return False
+
+            return  True
+
+
 
 
     # -----------------------------------------------------------------------------------------------------------------------
