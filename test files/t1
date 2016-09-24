@@ -23,3 +23,11 @@ ls /
 deldir /dir1
 ls /
 
+
+append /dir1/dir2/file2 "This is some data. "
+
+append /dir1/dir2/file2 "Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. "
+
+print /dir1/dir2/file2
+
+delfile /dir1/dir2/file2

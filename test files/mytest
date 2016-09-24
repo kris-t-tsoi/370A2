@@ -10,10 +10,11 @@ mkfile /dir1/dir2/file2
 
 mkfile /dir1/dir2/file3
 
-append /dir1/dir2/file2 "This is some data. "
+mkdir /dir1/dir2/dir3
 
-append /dir1/dir2/file2 "Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. "
+mkdir /dir1/dir2/dir3/dir4
 
-print /dir1/dir2/file2
+mkdir /dir1/dir2/dir3/dir5
 
-quit
+mkfile /dir1/dir2/dir3/dir4/file4
+

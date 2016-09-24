@@ -47,101 +47,66 @@ class TinyDOS:
         if len(path) > 2:
 
             print(str(directoryDetail))
-            print("argument 1 " + path[1])
+            print("argument 0 " + path[0])
 
             #if existing diretory
             if path[0] in directoryDetail:
 
-                if self.isDirectory(directoryDetail,path[1],path[0]):
+                if self.isDirectory(directoryDetail,path[0]):
 
                     print("in multi")
 
-                    #TODO fix this
-                    if path[1] not in directoryDetail:
+                    # get position
+                    dirDetPosInBlock = str(path[0]).find(directoryDetail) - self.volumeInst.FILE_ICON_SIZE
 
-                        # get position
-                        dirDetPosInBlock = str(path[0]).find(directoryDetail) - self.volumeInst.FILE_ICON_SIZE
-
-                        # get file detail
-                        dirDet = self.volumeInst.getFileDetail(path[0], directoryDetail)
-
-                        # get 4dig rep length
-                        dirLen = int(
-                            dirDet[self.volumeInst.POSITION_FILE_LENGTH:(self.volumeInst.POSITION_FILE_LENGTH + 4)])
-
-                        # get blocks allocated to file and split into array of allocations
-                        blkList = self.getAllocatedBlocks(dirDet)
-
-                        for x in range(0, 12):
-                            blkNum = int(blkList[x])
-                            if blkNum == 0:
-                                break
-                            else:
-                                det = self.driveInst.read_block(blkNum)
-
-                                if path[1] in det:
-                                    directoryDetail = det
+                    # get file detail
+                    dirDet = self.volumeInst.getFileDetail(path[0], directoryDetail)
 
 
-
-                    #get position
-                    dirDetPosInBlock = str(directoryDetail).find(path[1]) - self.volumeInst.FILE_ICON_SIZE
-
-                    #get file detail
-                    dirDet = self.volumeInst.getFileDetail(path[1], directoryDetail)
+                    print("dir det")
+                    print(dirDet)
 
                     # get 4dig rep length
                     dirLen = int(
                         dirDet[self.volumeInst.POSITION_FILE_LENGTH:(self.volumeInst.POSITION_FILE_LENGTH + 4)])
 
-                    # divide to find how many files are used
-                    index = int(dirLen / self.driveInst.BLK_SIZE)
-
-                    lastDataLen = int(dirLen % self.driveInst.BLK_SIZE)
-
-
-                    print("index "+str(index))
-                    print("lastDataLen "+str(lastDataLen))
-
-                    if lastDataLen != 0 :#and isFile == False:
-                        index= index + 1
-
-
                     # get blocks allocated to file and split into array of allocations
                     blkList = self.getAllocatedBlocks(dirDet)
 
-                    print("block allocation")
-                    print(blkList)
-
-                    found = False
-
-                    # loop through all blocks allocated to GP direct
-                    for x in range(0, (index + 1)):
+                    for x in range(0, 12):
                         blkNum = int(blkList[x])
-                        findParData = self.driveInst.read_block(blkNum)
-
                         if blkNum == 0:
                             break
+                        else:
+                            det = self.driveInst.read_block(blkNum)
 
-                        # Find blkNum allocaked to GP that contains parent
-                        if path[1] in findParData:
-                            print("p blk: " + str(blkNum))
+                            if path[1] in det:
+                                if self.isDirectory(det, path[1]):
+                                    directoryDetail = det
 
-                            self.volumeInst.glbParentBlkNum = blkNum
-                            self.volumeInst.glbGrandParentBlkNum = gpBlkNum
+                                    print("find ag1 "+path[1]+"in "+str(blkNum))
+                                    print("dir det")
+                                    print(directoryDetail)
 
-                            print("grandparent now changed to: " + str(self.volumeInst.glbGrandParentBlkNum))
-                            print("parent now changed to: " + str(self.volumeInst.glbParentBlkNum))
+                                    self.volumeInst.glbParentBlkNum = blkNum
+                                    self.volumeInst.glbGrandParentBlkNum = gpBlkNum
 
-                            break
+                                    print("grandparent now changed to: " + str(self.volumeInst.glbGrandParentBlkNum))
+                                    print("parent now changed to: " + str(self.volumeInst.glbParentBlkNum))
+
+                                else:
+                                    raise IOError("Path incorrect, can not use file as directory")
 
 
-
-                    if found == False:
-                        raise IOError("This file path does not exist")
 
                     self.volumeInst.glbGrandParentdet = self.driveInst.read_block(self.volumeInst.glbGrandParentBlkNum)
                     self.volumeInst.glbParentdet = self.driveInst.read_block(self.volumeInst.glbParentBlkNum)
+
+                    print("grand parent")
+                    print(self.volumeInst.glbGrandParentBlkNum)
+
+                    print("parent")
+                    print(self.volumeInst.glbParentBlkNum)
 
                     #find next gp and p in path
                     return self.recurDOSFile(self.volumeInst.glbParentBlkNum, path[1:],isFile=isFile)
@@ -153,12 +118,12 @@ class TinyDOS:
             else:
                 raise IOError("Path is invalid")
 
-        elif gpBlkNum == 0:
+        else:
 
             # if existing diretory
             if path[0] in directoryDetail:
 
-                if self.isDirectory(directoryDetail, path[0],''):
+                if self.isDirectory(directoryDetail, path[0]):
 
                     print("in")
 
@@ -229,13 +194,13 @@ class TinyDOS:
                     raise IOError("Path incorrect, can not use file as directory")
 
 
-
-        else:
-
-            print("return parent")
-            #return parent blk number
-            return self.volumeInst.glbParentBlkNum
-            pass
+        #
+        # else:
+        #
+        #     print("return parent")
+        #     #return parent blk number
+        #     return self.volumeInst.glbParentBlkNum
+        #     pass
 
 
 
@@ -387,7 +352,7 @@ class TinyDOS:
 
             self.volumeInst.childBlkNum = ''
 
-            # todo if nested directory, find blk where directory detail is stored
+            # if nested directory, find blk where directory detail is stored
             if len(args) != 2:
                 directoryDetBlkNum = self.recurDOSFile(0,path=args[1:-1], isFile = True)
                 self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2],self.volumeInst.glbParentdet)
@@ -755,8 +720,6 @@ class TinyDOS:
                 if fileDet[:2] != self.volumeInst.FILE_ICON:
                     raise IOError("This is not a file and therefore can not print data")
 
-
-
                 #get 4dig rep length
                 fileLen = int(fileDet[self.volumeInst.POSITION_FILE_LENGTH:(self.volumeInst.POSITION_FILE_LENGTH+4)])
 
@@ -783,13 +746,6 @@ class TinyDOS:
                     else:
                         print(str(dataPrint))
 
-
-
-            #if not a nested directory
-            else:
-                pass
-
-
     # -----------------------------------------------------------------------------------------------------------------------
     def deleteFile(self,pathname):
 
@@ -813,13 +769,23 @@ class TinyDOS:
             #reset data to write to ''
             self.volumeInst.dataToWrite = ''
 
-            # if nested directory, find blk where directory detail is stored
-            if len(args) != 2:
-                #TODO find directoryDetBlkNum
-                pass
+            self.volumeInst.childBlkNum = ''
 
-            #reads directory data
-            directoryDetail = self.driveInst.read_block(directoryDetBlkNum)
+            if len(args) != 2:
+                directoryDetBlkNum = self.recurDOSFile(0, path=args[1:-1], isFile=True)
+                detail = self.driveInst.read_block(directoryDetBlkNum)
+                self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2], detail)
+
+            writeblkNum = directoryDetBlkNum
+
+            if self.volumeInst.childBlkNum != '':
+                writeblkNum = self.volumeInst.childBlkNum
+
+            # reads directory data
+            directoryDetail = self.driveInst.read_block(writeblkNum)
+
+            self.updateBitMap()
+
 
             #check if file or directory of same name is in the directory
             if fileName in directoryDetail:
@@ -952,7 +918,7 @@ class TinyDOS:
 
 
     # -----------------------------------------------------------------------------------------------------------------------
-    def isDirectory(self,parentBlkDet, name,parentName):
+    def isDirectory(self,parentBlkDet, name):
 
         # find where file name was written in the block detail string
         namePos = str(parentBlkDet).find(name)
@@ -965,44 +931,44 @@ class TinyDOS:
         if str(icon) ==  str(self.volumeInst.DIRECTORY_ICON):
             return True
 
-        # get parent name from parent directory and see if name is there
-        else:
+        # # get parent name from parent directory and see if name is there
+        # else:
+        #
+        #     if parentName == '':
+        #         return False
+        #
+        #     # get position
+        #     dirDetPosInBlock = str(parentBlkDet).find(parentName) - self.volumeInst.FILE_ICON_SIZE
+        #
+        #     # get file detail
+        #     dirDet = self.volumeInst.getFileDetail(parentName, parentBlkDet)
+        #
+        #     # get 4dig rep length
+        #     dirLen = int(
+        #         dirDet[self.volumeInst.POSITION_FILE_LENGTH:(self.volumeInst.POSITION_FILE_LENGTH + 4)])
+        #
+        #     # get blocks allocated to file and split into array of allocations
+        #     blkList = self.getAllocatedBlocks(dirDet)
+        #
+        #     for x in range(0,12):
+        #         blkNum = int(blkList[x])
+        #         if blkNum == 0:
+        #             break
+        #         else:
+        #            det = self.driveInst.read_block(blkNum)
+        #
+        #            # find where file name was written in the block detail string
+        #            namePos = str(det).find(name)
+        #
+        #            # get position of file details   TODO will need ot change once do nested directorys
+        #            icon = det[(namePos - self.volumeInst.FILE_ICON_SIZE):namePos]
+        #
+        #            print(str(icon) + '*')
+        #
+        #            if str(icon) == str(self.volumeInst.DIRECTORY_ICON):
+        #                return True
 
-            if parentName == '':
-                return False
-
-            # get position
-            dirDetPosInBlock = str(parentBlkDet).find(parentName) - self.volumeInst.FILE_ICON_SIZE
-
-            # get file detail
-            dirDet = self.volumeInst.getFileDetail(parentName, parentBlkDet)
-
-            # get 4dig rep length
-            dirLen = int(
-                dirDet[self.volumeInst.POSITION_FILE_LENGTH:(self.volumeInst.POSITION_FILE_LENGTH + 4)])
-
-            # get blocks allocated to file and split into array of allocations
-            blkList = self.getAllocatedBlocks(dirDet)
-
-            for x in range(0,12):
-                blkNum = int(blkList[x])
-                if blkNum == 0:
-                    break
-                else:
-                   det = self.driveInst.read_block(blkNum)
-
-                   # find where file name was written in the block detail string
-                   namePos = str(det).find(name)
-
-                   # get position of file details   TODO will need ot change once do nested directorys
-                   icon = det[(namePos - self.volumeInst.FILE_ICON_SIZE):namePos]
-
-                   print(str(icon) + '*')
-
-                   if str(icon) == str(self.volumeInst.DIRECTORY_ICON):
-                       return True
-
-            return  False
+        return  False
 
 
 
