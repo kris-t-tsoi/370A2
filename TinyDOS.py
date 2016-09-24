@@ -137,40 +137,56 @@ class TinyDOS:
                     dirLen = int(
                         dirDet[self.volumeInst.POSITION_FILE_LENGTH:(self.volumeInst.POSITION_FILE_LENGTH + 4)])
 
-                    # divide to find how many block are used
-                    index = int(dirLen / self.driveInst.BLK_SIZE)
 
-                    lastDataLen = int(dirLen % self.driveInst.BLK_SIZE)
 
-                    print("index " + str(index))
-                    print("lastDataLen " + str(lastDataLen))
-
-                    #if next file is not full
-                    if lastDataLen != 0:# and isFile == False:
-                        index = index + 1
-
+                    # # divide to find how many block are used
+                    # index = int(dirLen / self.driveInst.BLK_SIZE)
+                    #
+                    # lastDataLen = int(dirLen % self.driveInst.BLK_SIZE)
+                    #
+                    # print("index " + str(index))
+                    # print("lastDataLen " + str(lastDataLen))
+                    #
+                    # #if next file is not full
+                    # if lastDataLen != 0:# and isFile == False:
+                    #     index = index + 1
+                    #
 
                     # get blocks allocated to file and split into array of allocations
                     blkList = self.getAllocatedBlocks(dirDet)
 
+
                     print("block allocation")
                     print(blkList)
 
-                    parentBlk= 0
+                    lastIn = 0
 
-                    #if there is no data at all
-                    if int(blkList[index]) == 0 and lastDataLen !=0:
-                        # get first free block block to be written to
-                        parentBlk = self.volumeInst.nextAvaiableBlock()
-                        print("gg")
 
-                    elif int(blkList[index]) == 0:
-                        parentBlk = int(blkList[index-1])
-                        print("hh")
+                    for x in range(0,12):
+                        blkNo = int(blkList[x])
+                        if blkNo == 0:
+                            break
+                        else:
+                            lastIn = blkNo
 
-                    else:
-                        parentBlk = int(blkList[index])
-                        print("aa")
+
+
+
+                    parentBlk= lastIn
+
+                    # #if there is no data at all
+                    # if int(blkList[index]) == 0 and lastDataLen !=0:
+                    #     # get first free block block to be written to
+                    #     parentBlk = self.volumeInst.nextAvaiableBlock()
+                    #     print("gg")
+                    #
+                    # elif int(blkList[lastIn]) == 0:
+                    #     parentBlk = int(blkList[index-1])
+                    #     print("hh")
+                    #
+                    # else:
+                    #     parentBlk = int(blkList[index])
+                    #     print("aa")
 
                     print("parent")
                     print(parentBlk)
