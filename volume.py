@@ -139,17 +139,10 @@ class Volume:
     # makes a file in the root directory
     def makeDir(self, dirName, dirBlk, parentDirDetail):
 
-        print("volume")
-
         # if there is space in directory to write
         if self.EMPTY_NAME_PLACE in parentDirDetail:
 
             det = self.writeDirectoryFirstFreeSpace(parentDirDetail,dirName)
-
-
-            print("return")
-            print(det)
-
 
             return det
 
@@ -160,6 +153,8 @@ class Volume:
             #change file det in grandparent to add in new block
 
             #recursive call this funtion with new next directory
+
+            print("------------ need to do ---------------")
 
 
             pass

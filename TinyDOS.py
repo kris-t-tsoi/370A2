@@ -335,6 +335,8 @@ class TinyDOS:
 
             else:
 
+                print("here")
+
                 dirName = args[len(args) - 1]
 
                 parenttblk = 0
@@ -342,12 +344,28 @@ class TinyDOS:
                 if len(args) != 2:
                     directoryDetBlkNum = self.recurDOSFile(0, path=args[1:-1], isFile=False)
 
+                else:
+                    self.volumeInst.glbGrandParentdet = self.driveInst.read_block(0)
+
+
                 gparentDet =''
 
+                print("grand parent "+str(self.volumeInst.glbGrandParentBlkNum))
+                print(self.volumeInst.glbGrandParentdet)
+
+                print("parent " + str(self.volumeInst.glbParentBlkNum))
+                print(self.volumeInst.glbParentdet)
+
                 if len(args) < 3:
+
+                    print("using gp")
+
                     self.volumeInst.childBlkNum = self.findChildBlkNum(dirName, self.volumeInst.glbGrandParentdet)
                     gparentDet = self.volumeInst.glbGrandParentdet
                 else:
+
+                    print("using p")
+
                     self.volumeInst.childBlkNum = self.findChildBlkNum(dirName, self.volumeInst.glbParentdet)
                     gparentDet = self.volumeInst.glbParentdet
 
@@ -416,9 +434,26 @@ class TinyDOS:
             # if nested directory, find blk where directory detail is stored
             if len(args) != 2:
                 directoryDetBlkNum = self.recurDOSFile(0,path=args[1:-1], isFile = True)
-                if len(args) < 3:
+
+
+
+
+                print("grand parent "+str(self.volumeInst.glbGrandParentBlkNum))
+                print(self.volumeInst.glbGrandParentdet)
+
+                print("parent " + str(self.volumeInst.glbParentBlkNum))
+                print(self.volumeInst.glbParentdet)
+
+
+
+                if len(args) < 4:
+
+                    print('use gp')
+
                     self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2], self.volumeInst.glbGrandParentdet)
                 else:
+
+                    print('use parent')
                     self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2], self.volumeInst.glbParentdet)
 
 
@@ -975,32 +1010,6 @@ class TinyDOS:
                                                                                                            int(blkList[0]) + 1):]
                     self.driveInst.write_block(int(blkList[0]), self.driveInst.EMPTY_BLK)
 
-
-                    # #for all block belonging to directory
-                    # for x in range(0, 12):
-                    #     fileBlkNum = int(blkList[x])
-                    #
-                    #     if fileBlkNum == 0:
-                    #         break
-                    #     else:
-                    #
-                    #         self.volumeInst.driveBlock0BitMap = self.volumeInst.driveBlock0BitMap[
-                    #                                             :fileBlkNum] + self.volumeInst.EMPTY_BLK_ICON + self.volumeInst.driveBlock0BitMap[
-                    #                                                                                             (
-                    #                                                                                             fileBlkNum + 1):]
-                    #         self.driveInst.write_block(fileBlkNum, self.driveInst.EMPTY_BLK)
-                    #
-                    #         #if so delete all
-                    #
-                    #         #else send erro syyaying ther eis still data in directory
-                    #
-                    #         # todo remove from bitmap and write empty value into blk
-                    #         self.volumeInst.driveBlock0BitMap = self.volumeInst.driveBlock0BitMap[
-                    #                                             :fileBlkNum] + self.volumeInst.EMPTY_BLK_ICON + self.volumeInst.driveBlock0BitMap[
-                    #                                                                                             (
-                    #                                                                                             fileBlkNum + 1):]
-                    #         self.driveInst.write_block(fileBlkNum, self.driveInst.EMPTY_BLK)
-
                     # update directory with empty file detail
                     changeFilDet = directoryDetail[
                                    :fileDetPosInBlock] + self.volumeInst.emptyFileName() + directoryDetail[(
@@ -1061,7 +1070,7 @@ class TinyDOS:
         # find where file name was written in the block detail string
         namePos = str(parentBlkDet).find(name)
 
-        # get position of file details   TODO will need ot change once do nested directorys
+        # get position of file details
         icon = parentBlkDet[(namePos - self.volumeInst.FILE_ICON_SIZE):namePos]
 
         print(str(icon)+'*')
