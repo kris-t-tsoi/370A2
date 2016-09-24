@@ -14,6 +14,8 @@ class TinyDOS:
     driveInst = None
     volumeInst = None
 
+    # -----------------------------------------------------------------------------------------------------------------------
+    #gets file details and returns list of all blocks allovated to it
     def getAllocatedBlocks(self, fileDet):
 
         # get blocks allocated to file and split into array of allocations
@@ -21,8 +23,6 @@ class TinyDOS:
         blkList = str(blksAllocated).split(' ')  # note has extra '' at last index as there was space
 
         return blkList
-
-
     # -----------------------------------------------------------------------------------------------------------------------
 
     #path is userPathFile[:-1] (so path does not contain the child (dir/fil that is to be read/written/made to
@@ -312,7 +312,8 @@ class TinyDOS:
                 dirDet = self.driveInst.read_block(directoryDetBlkNum)
 
                 if self.checkIfDirectoryEmpty(dirDet,'',isRoot=True) == True:
-                    raise IOError("Directory " + str(pathname) + " has no files")
+                    print("Directory " + str(pathname) + " has no files")
+                    return
 
                 else:
 
@@ -352,13 +353,16 @@ class TinyDOS:
                     self.volumeInst.childBlkNum = self.findChildBlkNum(dirName, self.volumeInst.glbParentdet)
                     gparentDet = self.volumeInst.glbParentdet
 
-                if self.checkIfDirectoryEmpty(gparentDet,dirName, isRoot=True) == True:
-                    raise IOError("Directory " + str(pathname) + " has no files")
+                if self.checkIfDirectoryEmpty(gparentDet,dirName, isRoot=False) == True:
+                    print("Directory " + str(pathname) + " has no files")
+                    return
 
                 else:
 
                     # get allocated blks
                     fileDet = self.volumeInst.getFileDetail(dirName, gparentDet)
+                    print("file details")
+                    print(fileDet)
 
                     # get blocks allocated to directory and split into array of allocations
                     blksAllocated = fileDet[self.volumeInst.POSITION_3_DIGIT:]
@@ -494,7 +498,7 @@ class TinyDOS:
             return blkNum
 
 
-            # -----------------------------------------------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------------------------------------------
     def makeDirectory(self,pathname):
 
         if ' ' in pathname:
@@ -519,7 +523,7 @@ class TinyDOS:
 
             self.volumeInst.childBlkNum = ''
 
-            # todo if nested directory, find blk where directory detail is stored
+            #if nested directory, find blk where directory detail is stored
             if len(args) != 2:
                 directoryDetBlkNum = self.recurDOSFile(0, path=args[1:-1], isFile=False)
 
@@ -740,8 +744,6 @@ class TinyDOS:
 
     # -----------------------------------------------------------------------------------------------------------------------
     def printFile(self, pathname):
-
-        print("print file")
 
         if ' ' in pathname:
             print("path can not contain any spaces")
@@ -983,6 +985,10 @@ class TinyDOS:
      # -----------------------------------------------------------------------------------------------------------------------
     def checkIfDirectoryEmpty(self, blkData, dirName, isRoot = False):
 
+        print("checking !!!!!!!!!!!!")
+
+        print(blkData)
+
         index = 8
 
         if isRoot == True:
@@ -1002,9 +1008,18 @@ class TinyDOS:
             blksAllocated = fileDet[self.volumeInst.POSITION_3_DIGIT:]
             blkList = str(blksAllocated).split(' ')  # note has extra '' at last index as there was space
 
+            print(blkList)
+
             for x in range(0, 12):
-                if int(blkList[x]) == 0:
-                    return False
+                if int(blkList[x]) != 0:
+
+                    dir = self.driveInst.read_block(int(blkList[x]))
+
+                    print(dir)
+
+                    if dir.count(' ' * 9) != index:
+                        return False
+
 
             return  True
 
