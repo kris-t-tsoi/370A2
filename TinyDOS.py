@@ -445,26 +445,12 @@ class TinyDOS:
             # if nested directory, find blk where directory detail is stored
             if len(args) > 2:
                 directoryDetBlkNum = self.recurDOSFile(0,path=args[1:-1], isFile = True)
-
-                print( directoryDetBlkNum)
-                print(self.volumeInst.glbGrandParentdet)
-
                 if len(args) == 3:
                     self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2], self.volumeInst.glbGrandParentdet)
                 else:
                     self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2], self.volumeInst.glbParentdet)
 
 
-
-            # if len(args) == 3:
-            #     # directoryDetBlkNum = self.recurDOSFile(0, path=args[1:-1], isFile=True)
-            #     self.volumeInst.glbParentBlkNum = 0
-            #     self.volumeInst.glbGrandParentdet = self.driveInst.read_block(0)
-            #     self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2], self.volumeInst.glbParentdet)
-
-
-
-            writeblkNum = directoryDetBlkNum
 
             if self.volumeInst.childBlkNum != '':
                 writeblkNum = self.volumeInst.childBlkNum
@@ -669,6 +655,11 @@ class TinyDOS:
                 directoryDetBlkNum = self.recurDOSFile(0, path=args[1:-1], isFile=True)
                 detail = self.driveInst.read_block(directoryDetBlkNum)
                 self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2],detail)
+
+                # if len(args) == 3:
+                #     self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2], self.volumeInst.glbGrandParentdet)
+                # else:
+                #     self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2], self.volumeInst.glbParentdet)
 
             writeblkNum = directoryDetBlkNum
 
