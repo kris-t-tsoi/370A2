@@ -306,8 +306,6 @@ class TinyDOS:
             #if root
             if len(args) == 2 and args[1] == '':
 
-                print("in root")
-
                 # reads directory data
                 dirDet = self.driveInst.read_block(directoryDetBlkNum)
 
@@ -361,8 +359,6 @@ class TinyDOS:
 
                     # get allocated blks
                     fileDet = self.volumeInst.getFileDetail(dirName, gparentDet)
-                    print("file details")
-                    print(fileDet)
 
                     # get blocks allocated to directory and split into array of allocations
                     blksAllocated = fileDet[self.volumeInst.POSITION_3_DIGIT:]
@@ -862,6 +858,9 @@ class TinyDOS:
             # reads directory data
             directoryDetail = self.driveInst.read_block(writeblkNum)
 
+            print("det of blk "+str(writeblkNum))
+            print(directoryDetail)
+
             self.updateBitMap()
 
 
@@ -890,7 +889,11 @@ class TinyDOS:
 
                 #update directory with empty file detail
                 changeFilDet = directoryDetail[:fileDetPosInBlock]+self.volumeInst.emptyFileName()+directoryDetail[(fileDetPosInBlock+self.volumeInst.TOTAL_FILE_DETAIL_SIZE):]
-                self.driveInst.write_block(directoryDetBlkNum,changeFilDet)
+
+                print("change dir " + str(writeblkNum))
+                print(changeFilDet)
+
+                self.driveInst.write_block(writeblkNum,changeFilDet)
 
                 # update bitmap in block 0
                 blk0data = self.driveInst.read_block(0)
@@ -985,10 +988,6 @@ class TinyDOS:
      # -----------------------------------------------------------------------------------------------------------------------
     def checkIfDirectoryEmpty(self, blkData, dirName, isRoot = False):
 
-        print("checking !!!!!!!!!!!!")
-
-        print(blkData)
-
         index = 8
 
         if isRoot == True:
@@ -1008,19 +1007,11 @@ class TinyDOS:
             blksAllocated = fileDet[self.volumeInst.POSITION_3_DIGIT:]
             blkList = str(blksAllocated).split(' ')  # note has extra '' at last index as there was space
 
-            print(blkList)
-
             for x in range(0, 12):
                 if int(blkList[x]) != 0:
-
                     dir = self.driveInst.read_block(int(blkList[x]))
-
-                    print(dir)
-
                     if dir.count(' ' * 9) != index:
                         return False
-
-
             return  True
 
 

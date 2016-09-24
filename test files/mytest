@@ -2,11 +2,13 @@ format b
 
 mkdir /dir
 
-mkdir /dir1
-
 mkdir /dir/dir2
 
 mkdir /dir/dir3
+
+mkfile /dir/g
+
+mkfile /hh
 
 mkfile /dir/dir2/file1
 
@@ -14,14 +16,17 @@ mkfile /dir/dir2/file2
 
 mkfile /dir/dir2/file3
 
-
-append /dir/dir2/file1 "This is some data. "
+append /dir/g "This is some data. "
 
 append /dir/dir2/file2 "Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. Now adding over 4 blocks worth of data. "
 
 ls /dir
 
-ls /dir1
+ls /
+
+ls /dir/dir2
+
+delfile /dir/dir2/file2
 
 ls /dir/dir2
 
