@@ -166,6 +166,8 @@ class TinyDOS:
 
                     elif int(blkList[index]) == 0:
                         parentBlk = int(blkList[index - 1])
+                        if parentBlk == 0:
+                            parentBlk = int(blkList[index - 2])
                         print("hh")
 
                     else:
@@ -327,8 +329,6 @@ class TinyDOS:
     # -----------------------------------------------------------------------------------------------------------------------
     def list(self,pathname):
 
-        print("inlist")
-
         if ' ' in pathname:
             print("path can not contain any spaces")
 
@@ -336,22 +336,12 @@ class TinyDOS:
             print('root directory is not in pathname')
 
         else:
-            print("path")
-            print(pathname)
-
             args = pathname.split('/')
-
-            print("args size "+str(len(args)))
-
-            print(args)
 
             # set default directory block number where file is to be created in
             directoryDetBlkNum = 0
 
-            # initalise block number where file data is
-            blockNumber = 0
-
-            # reset data to write to ''
+             # reset data to write to ''
             self.volumeInst.dataToWrite = ''
 
             #if root
@@ -389,36 +379,10 @@ class TinyDOS:
 
                 dirName = args[len(args) - 1]
 
-                print("dir name")
-                print(dirName)
-
                 parenttblk = 0
 
-                # todo if nested directory, find blk where directory detail is stored
                 if len(args) != 2:
                     directoryDetBlkNum = self.recurDOSFile(0, path=args[1:-1], isFile=False)
-
-                #
-                # if len(args) >3 :
-                #     parenttblk = 0
-                # # elif len(args) ==2 :
-                # #     parenttblk = 0
-                # #     pass
-                # else:
-                #     directoryDetBlkNum = self.findChildBlkNum(args[-2], self.volumeInst.glbGrandParentdet)
-
-                print("parent blk num")
-                print(self.volumeInst.glbParentBlkNum)
-
-                print("parent details")
-                print(self.volumeInst.glbParentdet)
-
-                print("Grandparent blk num")
-                print(self.volumeInst.glbGrandParentBlkNum)
-
-                print("Grandparent details")
-                print(self.volumeInst.glbGrandParentdet)
-
 
                 gparentDet =''
 
@@ -429,33 +393,12 @@ class TinyDOS:
                     self.volumeInst.childBlkNum = self.findChildBlkNum(dirName, self.volumeInst.glbParentdet)
                     gparentDet = self.volumeInst.glbParentdet
 
-
-                # reads directory data
-                # dirDet = self.driveInst.read_block(self.volumeInst.childBlkNum)
-
-                # print("child blk num")
-                # print(self.volumeInst.childBlkNum)
-                #
-                # print("details")
-                # print(dirDet)
-
-
-                # self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2], directoryDetBlkNum)
-                #
-                # self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2], parenttblk)
-
-
-
                 if self.checkIfDirectoryEmpty(gparentDet,dirName, isRoot=True) == True:
                     raise IOError("Directory " + str(pathname) + " has no files")
 
                 else:
 
-                    #TODO change and go through all blk for dir as can have more than one blk
-
                     # get allocated blks
-
-                    fileDetPosInBlock = str(gparentDet).find(dirName) - self.volumeInst.FILE_ICON_SIZE
                     fileDet = self.volumeInst.getFileDetail(dirName, gparentDet)
 
                     # get blocks allocated to directory and split into array of allocations
@@ -482,8 +425,6 @@ class TinyDOS:
                                 else:
                                     print(str(name) + ' has Size: ' + str(size))
 
-
-        pass
 
     # -----------------------------------------------------------------------------------------------------------------------
     def makeFile(self, pathname):
@@ -514,9 +455,9 @@ class TinyDOS:
             self.volumeInst.childBlkNum = ''
 
             # if nested directory, find blk where directory detail is stored
-            if len(args) > 2:
+            if len(args) != 2:
                 directoryDetBlkNum = self.recurDOSFile(0,path=args[1:-1], isFile = True)
-                if len(args) == 3:
+                if len(args) < 3:
                     self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2], self.volumeInst.glbGrandParentdet)
                 else:
                     self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2], self.volumeInst.glbParentdet)
