@@ -841,7 +841,7 @@ class TinyDOS:
             self.volumeInst.childBlkNum = ''
 
             if len(args) != 2:
-                directoryDetBlkNum = self.recurDOSFile(0, path=args[1:-1], isFile=True) #todo fix
+                directoryDetBlkNum = self.recurDOSFile(0, path=args[1:-1], isFile=True)
 
                 if len(args) ==3:
                     directoryDetBlkNum = 0
@@ -858,9 +858,6 @@ class TinyDOS:
             # reads directory data
             directoryDetail = self.driveInst.read_block(writeblkNum)
 
-            print("det of blk "+str(writeblkNum))
-            print(directoryDetail)
-
             self.updateBitMap()
 
 
@@ -872,9 +869,6 @@ class TinyDOS:
                 #get blocks allocated to file and split into array of allocations
                 blksAllocated = fileDet[self.volumeInst.POSITION_3_DIGIT:]
                 blkList = str(blksAllocated).split(' ') #note has extra '' at last index as there was space
-
-                print(blkList)
-
                 bitmap = self.volumeInst.driveBlock0BitMap
 
                 for x in range(0, 12):
@@ -883,15 +877,12 @@ class TinyDOS:
                     if fileBlkNum == 0:
                         break
                     else:
-                        #todo remove from bitmap and write empty value into blk
+                        #remove from bitmap
                         self.volumeInst.driveBlock0BitMap=self.volumeInst.driveBlock0BitMap[:fileBlkNum] + self.volumeInst.EMPTY_BLK_ICON + self.volumeInst.driveBlock0BitMap[(fileBlkNum + 1):]
                         self.driveInst.write_block(fileBlkNum, self.driveInst.EMPTY_BLK)
 
                 #update directory with empty file detail
                 changeFilDet = directoryDetail[:fileDetPosInBlock]+self.volumeInst.emptyFileName()+directoryDetail[(fileDetPosInBlock+self.volumeInst.TOTAL_FILE_DETAIL_SIZE):]
-
-                print("change dir " + str(writeblkNum))
-                print(changeFilDet)
 
                 self.driveInst.write_block(writeblkNum,changeFilDet)
 
@@ -913,7 +904,7 @@ class TinyDOS:
         else:
 
             args = pathname.split('/')
-            fileName = args[len(args) - 1]
+            dirName = args[len(args) - 1]
 
             # set default directory block number where file is to be created in
             directoryDetBlkNum = 0
@@ -924,56 +915,103 @@ class TinyDOS:
             # reset data to write to ''
             self.volumeInst.dataToWrite = ''
 
-            # if nested directory, find blk where directory detail is stored
+            self.volumeInst.childBlkNum = ''
+
+
+            #get parent and grandparent blk num and details
             if len(args) != 2:
-                # TODO find directoryDetBlkNum
-                pass
+                directoryDetBlkNum = self.recurDOSFile(0, path=args[1:-1], isFile=True)  # todo fix
+
+                #--
+
+                if len(args) == 3:
+                    directoryDetBlkNum = 0
+
+                detail = self.driveInst.read_block(directoryDetBlkNum)
+                self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2], detail)
+
+
+                # if len(args) > 3:
+                #     self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2], self.volumeInst.glbParentdet)
+
+                #--
+
+
+
+            writeblkNum = directoryDetBlkNum
+
+            if self.volumeInst.childBlkNum != '':
+                writeblkNum = self.volumeInst.childBlkNum
 
             # reads directory data
-            directoryDetail = self.driveInst.read_block(directoryDetBlkNum)
+            directoryDetail = self.driveInst.read_block(writeblkNum)
+
+
+            print("fr dir "+str(writeblkNum))
+            print(directoryDetail)
+
+
+            self.updateBitMap()
 
             # check if file or directory of same name is in the directory
-            if fileName in directoryDetail:
-                fileDetPosInBlock = str(directoryDetail).find(fileName) - self.volumeInst.FILE_ICON_SIZE
-                fileDet = self.volumeInst.getFileDetail(fileName, directoryDetail)
+            if dirName in directoryDetail:
+                fileDetPosInBlock = str(directoryDetail).find(dirName) - self.volumeInst.FILE_ICON_SIZE
+                fileDet = self.volumeInst.getFileDetail(dirName, directoryDetail)
 
-                # get blocks allocated to directory and split into array of allocations
+                # get blocks allocated to file and split into array of allocations
                 blksAllocated = fileDet[self.volumeInst.POSITION_3_DIGIT:]
                 blkList = str(blksAllocated).split(' ')  # note has extra '' at last index as there was space
-
                 bitmap = self.volumeInst.driveBlock0BitMap
 
-                for x in range(0, 12):
-                    fileBlkNum = int(blkList[x])
+                # check if all blocks allocated to diectory is empty
+                if self.checkIfDirectoryEmpty(directoryDetail, dirName, isRoot=False) == False:
+                    print("Directry " + pathname + " has data, so can not be deleted")
+                    return
 
-                    if fileBlkNum == 0:
-                        break
-                    else:
+                else:
+                    self.volumeInst.driveBlock0BitMap = self.volumeInst.driveBlock0BitMap[
+                                                       :int(blkList[0])] + self.volumeInst.EMPTY_BLK_ICON + self.volumeInst.driveBlock0BitMap[
+                                                                                                       (
+                                                                                                           int(blkList[0]) + 1):]
+                    self.driveInst.write_block(int(blkList[0]), self.driveInst.EMPTY_BLK)
 
-                        #check if all blocks allocated to diectory is empty
 
+                    # #for all block belonging to directory
+                    # for x in range(0, 12):
+                    #     fileBlkNum = int(blkList[x])
+                    #
+                    #     if fileBlkNum == 0:
+                    #         break
+                    #     else:
+                    #
+                    #         self.volumeInst.driveBlock0BitMap = self.volumeInst.driveBlock0BitMap[
+                    #                                             :fileBlkNum] + self.volumeInst.EMPTY_BLK_ICON + self.volumeInst.driveBlock0BitMap[
+                    #                                                                                             (
+                    #                                                                                             fileBlkNum + 1):]
+                    #         self.driveInst.write_block(fileBlkNum, self.driveInst.EMPTY_BLK)
+                    #
+                    #         #if so delete all
+                    #
+                    #         #else send erro syyaying ther eis still data in directory
+                    #
+                    #         # todo remove from bitmap and write empty value into blk
+                    #         self.volumeInst.driveBlock0BitMap = self.volumeInst.driveBlock0BitMap[
+                    #                                             :fileBlkNum] + self.volumeInst.EMPTY_BLK_ICON + self.volumeInst.driveBlock0BitMap[
+                    #                                                                                             (
+                    #                                                                                             fileBlkNum + 1):]
+                    #         self.driveInst.write_block(fileBlkNum, self.driveInst.EMPTY_BLK)
 
-                        #if so delete all
+                    # update directory with empty file detail
+                    changeFilDet = directoryDetail[
+                                   :fileDetPosInBlock] + self.volumeInst.emptyFileName() + directoryDetail[(
+                        fileDetPosInBlock + self.volumeInst.TOTAL_FILE_DETAIL_SIZE):]
 
-                        #else send erro syyaying ther eis still data in directory
+                    self.driveInst.write_block(writeblkNum, changeFilDet)
 
-                        # todo remove from bitmap and write empty value into blk
-                        self.volumeInst.driveBlock0BitMap = self.volumeInst.driveBlock0BitMap[
-                                                            :fileBlkNum] + self.volumeInst.EMPTY_BLK_ICON + self.volumeInst.driveBlock0BitMap[
-                                                                                                            (
-                                                                                                            fileBlkNum + 1):]
-                        self.driveInst.write_block(fileBlkNum, self.driveInst.EMPTY_BLK)
-
-                # update directory with empty file detail
-                changeFilDet = directoryDetail[:fileDetPosInBlock] + self.volumeInst.emptyFileName() + directoryDetail[(
-                fileDetPosInBlock + self.volumeInst.TOTAL_FILE_DETAIL_SIZE):]
-                self.driveInst.write_block(directoryDetBlkNum, changeFilDet)
-
-                # update bitmap in block 0
-                blk0data = self.driveInst.read_block(0)
-                self.volumeInst.updateBlk0BitmapToBeWritten(blk0data)
-                self.driveInst.write_block(0, self.volumeInst.dataToWrite)
-        pass
+                    # update bitmap in block 0
+                    blk0data = self.driveInst.read_block(0)
+                    self.volumeInst.updateBlk0BitmapToBeWritten(blk0data)
+                    self.driveInst.write_block(0, self.volumeInst.dataToWrite)
 
     # -----------------------------------------------------------------------------------------------------------------------
     def quitProgram(self):
@@ -1030,43 +1068,6 @@ class TinyDOS:
 
         if str(icon) ==  str(self.volumeInst.DIRECTORY_ICON):
             return True
-
-        # # get parent name from parent directory and see if name is there
-        # else:
-        #
-        #     if parentName == '':
-        #         return False
-        #
-        #     # get position
-        #     dirDetPosInBlock = str(parentBlkDet).find(parentName) - self.volumeInst.FILE_ICON_SIZE
-        #
-        #     # get file detail
-        #     dirDet = self.volumeInst.getFileDetail(parentName, parentBlkDet)
-        #
-        #     # get 4dig rep length
-        #     dirLen = int(
-        #         dirDet[self.volumeInst.POSITION_FILE_LENGTH:(self.volumeInst.POSITION_FILE_LENGTH + 4)])
-        #
-        #     # get blocks allocated to file and split into array of allocations
-        #     blkList = self.getAllocatedBlocks(dirDet)
-        #
-        #     for x in range(0,12):
-        #         blkNum = int(blkList[x])
-        #         if blkNum == 0:
-        #             break
-        #         else:
-        #            det = self.driveInst.read_block(blkNum)
-        #
-        #            # find where file name was written in the block detail string
-        #            namePos = str(det).find(name)
-        #
-        #            # get position of file details   TODO will need ot change once do nested directorys
-        #            icon = det[(namePos - self.volumeInst.FILE_ICON_SIZE):namePos]
-        #
-        #            print(str(icon) + '*')
-        #
-        #            if str(icon) == str(self.volumeInst.DIRECTORY_ICON):
-        #                return True
 
         return  False
 
@@ -1171,7 +1172,10 @@ class TinyDOS:
 
         #delete empty directory
         elif command == "deldir"and len(args)==2:
-            pass
+            try:
+                self.deleteDirectory(args[1])
+            except IOError as e:
+                print(e)
 
         # delete empty directory
         elif command == "quit"and len(args)==1:

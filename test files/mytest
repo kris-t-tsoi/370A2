@@ -24,11 +24,11 @@ ls /dir
 
 ls /
 
-ls /dir/dir2
+ls /dir
 
-delfile /dir/dir2/file2
+deldir /dir/dir3
 
-ls /dir/dir2
+ls /dir
 
 
 
