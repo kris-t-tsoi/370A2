@@ -24,6 +24,8 @@ class Volume:
     FILE_ICON_SIZE =2
 
     EMPTY_FILE_NAME = ' '*MAX_FILE_NAME_SIZE
+
+    EMPTY_NAME_PLACE = ' '*9
     #"name5678 0000:000 000 000 000 000 000 000 000 000 000 000 000 "
     EMPTY_DETAIL = EMPTY_FILE_NAME+' '+('0'*4)+':'+((('0'*3)+' ')*MAX_FILE_BLOCK_USE)
 
@@ -97,7 +99,7 @@ class Volume:
     def makeFile(self, fileName):
 
         #if there is space in directory to write
-        if self.EMPTY_FILE_NAME in self.dataRead:
+        if self.EMPTY_NAME_PLACE in self.dataRead:
             self.writeFileFirstFreeSpace(self.dataRead,fileName)
 
         #else is there is no room get the next avaiable block
@@ -119,7 +121,7 @@ class Volume:
     def makeBlkFile(self, fileName,dirBlk, dirDetail):
 
         # if there is space in directory to write
-        if self.EMPTY_FILE_NAME in dirDetail:
+        if self.EMPTY_NAME_PLACE in dirDetail:
             det = self.writeFileFirstFreeSpace(dirDetail, fileName)
 
             #change block 0 bitmap detail is dirblk is not blk0
@@ -140,7 +142,7 @@ class Volume:
         print("volume")
 
         # if there is space in directory to write
-        if self.EMPTY_FILE_NAME in parentDirDetail:
+        if self.EMPTY_NAME_PLACE in parentDirDetail:
 
             det = self.writeDirectoryFirstFreeSpace(parentDirDetail,dirName)
 
@@ -189,7 +191,7 @@ class Volume:
         blkNum = self.nextAvaiableBlock()
 
         #write name to first free space
-        dirDetail = data.replace(str(self.EMPTY_FILE_NAME),str(fileName).ljust(self.MAX_FILE_NAME_SIZE,' '),1)
+        dirDetail = data.replace(str(self.EMPTY_NAME_PLACE),str(fileName).ljust(self.MAX_FILE_NAME_SIZE+1,' '),1)
 
         #find where file name was written in the block detail string
         namePos = str(dirDetail).find(fileName)
@@ -213,7 +215,7 @@ class Volume:
         self.extraReturn = self.createDirectoryFormat()
 
         # write name to first free space
-        parentDirData = parentDirData.replace(str(self.EMPTY_FILE_NAME), str(dirName).ljust(self.MAX_FILE_NAME_SIZE, ' '), 1)
+        parentDirData = parentDirData.replace(str(self.EMPTY_NAME_PLACE), str(dirName).ljust(self.MAX_FILE_NAME_SIZE+1, ' '), 1)
 
         #get position in data to write dir details to
         detPosInBlock = str(parentDirData).find(dirName) - self.FILE_ICON_SIZE
