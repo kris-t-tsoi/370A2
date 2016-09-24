@@ -452,6 +452,8 @@ class TinyDOS:
 
 
 
+            writeblkNum = directoryDetBlkNum
+
             if self.volumeInst.childBlkNum != '':
                 writeblkNum = self.volumeInst.childBlkNum
 
@@ -653,6 +655,8 @@ class TinyDOS:
 
             if len(args) != 2:
                 directoryDetBlkNum = self.recurDOSFile(0, path=args[1:-1], isFile=True)
+                if len(args) ==3:
+                    directoryDetBlkNum = 0
                 detail = self.driveInst.read_block(directoryDetBlkNum)
                 self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2],detail)
 
@@ -660,6 +664,7 @@ class TinyDOS:
                 #     self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2], self.volumeInst.glbGrandParentdet)
                 # else:
                 #     self.volumeInst.childBlkNum = self.findChildBlkNum(args[-2], self.volumeInst.glbParentdet)
+
 
             writeblkNum = directoryDetBlkNum
 
